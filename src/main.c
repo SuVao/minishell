@@ -23,11 +23,13 @@ int main(int ac, char **av, char **envp)
         // Exibe o prompt com o diretório atual
         printf("%s> ", cwd);
 
-        while ((input = readline("\0")) != NULL)
+        while ((input = readline("")) != NULL)
         {
         	if (*input)
          	{
           		add_history(input);
+            	if (strcmp(input, "exit") == 0)
+             		exit(0);
 		 		break;
 		 	}
           	free(input);
@@ -36,12 +38,6 @@ int main(int ac, char **av, char **envp)
         // Remove a nova linha no final do comando
         command[strcspn(command, "\n")] = 0;
 
-        // Se o usuário digitar "exit", sair do shell
-        if (strcmp(command, "exit") == 0)
-        {
-            printf("Saindo...\n");
-            break;
-        }
 
         // Executa o comando usando o sistema padrão (system)
         if (system(command) == -1) {
