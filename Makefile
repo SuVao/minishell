@@ -4,7 +4,7 @@ CC= cc
 CFLAGS= -Wall -Wextra -Werror
 SRC_DIR= ./src
 OBJ_DIR= ./obj
-LIBFT_DIR= ./Libft/
+LIBFT_DIR= ./libft
 LDFLAGS = -lreadline
 LIBFT = $(LIBFT_DIR)/libft.a
 SRC_FILES= main.c\
@@ -21,13 +21,14 @@ $(NAME): $(LIBFT) $(OBJ)
 	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME) $(LDFLAGS) -L$(LIBFT_DIR) -lft
 
 $(LIBFT):
+	@echo "compiling libft"
 	@make -C $(LIBFT_DIR)
 
 all: $(NAME)
 
 clean:
+	@rm -r $(NAME)
 	@make clean -C ${LIBFT_DIR}
-	@rm -rf $(OBJ_DIR)
 	@echo "minishell object files removed"
 
 fclean: clean

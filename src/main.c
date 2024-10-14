@@ -9,21 +9,15 @@ int main(int ac, char **av, char **envp)
 	(void)av;
 	(void)envp;
 	char command[MAX_COMMAND_LENGTH];
-    char cwd[1024];  // Para armazenar o diretório atual
 
     char *input;
 
     while (1) {
-        // Obtém o diretório de trabalho atual
-        if (getcwd(cwd, sizeof(cwd)) == NULL) {
-            perror("getcwd() error");
-            return 1;
-        }
 
-        // Exibe o prompt com o diretório atual
-        printf("%s> ", cwd);
 
-        while ((input = readline("")) != NULL)
+        printf("minishell> ");
+        input = readline("");
+        while (input != NULL)
         {
         	if (*input)
          	{
@@ -33,6 +27,7 @@ int main(int ac, char **av, char **envp)
 		 		break;
 		 	}
           	free(input);
+           	input = readline("");
         }
 
         // Remove a nova linha no final do comando
