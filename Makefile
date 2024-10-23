@@ -1,13 +1,14 @@
 NAME= minishell
 
 CC= cc
-CFLAGS= -Wall -Wextra -Werror
+CFLAGS= -Wall -Wextra -Werror -g
 SRC_DIR= ./src
 OBJ_DIR= ./obj
 LIBFT_DIR= ./libft
 LDFLAGS = -lreadline
 LIBFT = $(LIBFT_DIR)/libft.a
-SRC_FILES= main.c\
+SRC_FILES= 	main.c\
+			main2.c\
 
 SRCS= $(addprefix $(SRC_DIR)/,$(SRC_FILES))
 OBJ= $(addprefix $(OBJ_DIR)/,$(SRC_FILES:.c=.o))
@@ -28,6 +29,7 @@ all: $(NAME)
 
 clean:
 	@rm -r $(NAME)
+	@rm -rf $(OBJ_DIR)
 	@make clean -C ${LIBFT_DIR}
 	@echo "minishell object files removed"
 
