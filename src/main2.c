@@ -1,5 +1,5 @@
 
-// #include "../inc/minishell.h"
+#include "../inc/minishell.h"
 
 // int	if_builtins(char *cmd)
 // {

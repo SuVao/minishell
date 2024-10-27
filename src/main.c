@@ -1,11 +1,21 @@
 
 #include "../inc/minishell.h"
 
+void free_args(char **args)
+{
+	int i = 0;
+	if (!args) return;
+	while (args[i])
+	{
+		free(args[i]);
+		i++;
+	}
+	free(args);
+}
+
 void check_line(char *line)
 {
-	int i;
-
-	i = 0;
+	int i = 0;
 	while (line[i])
 	{
 		if (line[i] == ';')
@@ -17,21 +27,10 @@ void check_line(char *line)
 	}
 }
 
-void	ft_free(void **args)
-{
-	while (*(args))
-	{
-		free(*args);
-		args++;
-	}
-	free(*(args));
-}
-
 void ft_free_env(char **env)
 {
-	int i;
-
-	i = 0;
+	int i = 0;
+	if (!env) return;
 	while (env[i])
 	{
 		free(env[i]);
@@ -42,23 +41,9 @@ void ft_free_env(char **env)
 
 void ft_exit(t_mini *mini)
 {
-	int i;
-
-	i = 0;
 	clear_history();
-	// while (mini->env[i])
-	// {
-	// 	free(mini->env[i]);
-	// 	i++;
-	// }
-	free(mini->env);
-	i = 0;
-	while (mini->args[i])
-	{
-		free(mini->args[i]);
-		i++;
-	}
-	free(mini->args);
+	ft_free_env(mini->env);
+	free_args(mini->args);
 	free(mini->line);
 	free(mini);
 	exit(0);
@@ -66,9 +51,7 @@ void ft_exit(t_mini *mini)
 
 void ft_pwd()
 {
-	char *pwd;
-
-	pwd = getcwd(NULL, 0);
+	char *pwd = getcwd(NULL, 0);
 	if (pwd == NULL)
 	{
 		printf("Error: getcwd failed\n");
@@ -80,9 +63,7 @@ void ft_pwd()
 
 void ft_env(t_mini *mini)
 {
-	int i;
-
-	i = 0;
+	int i = 0;
 	while (mini->env[i])
 	{
 		printf("%s\n", mini->env[i]);
@@ -90,42 +71,22 @@ void ft_env(t_mini *mini)
 	}
 }
 
-void	ft_export(t_mini *mini)
+void ft_export(t_mini *mini)
 {
-	int i;
-	char *tmp;
-	i = 0;
+	int i = 0;
 	while (mini->env[i] != NULL)
 		i++;
-	tmp = ft_strjoin(mini->env[i], mini->args[1]);
-//	free(mini->env[i]);
-	mini->env[i] = tmp;
-	free(tmp);
-}
-
-void free_args(char **args)
-{
-	int i;
-
-	i = 0;
-	while (args[i])
-	{
-		free(args[i]);
-		i++;
-	}
-	free(args);
+	mini->env[i] = ft_strjoin("NEW_VAR=", mini->args[1]);
 }
 
 void ft_unset(t_mini *mini)
 {
 	int i;
 	int j;
-	int k;
 	char **new_env;
 
 	i = 0;
 	j = 0;
-	k = 0;
 	while (mini->env[i])
 		i++;
 	new_env = (char **)malloc(sizeof(char *) * i);
@@ -137,6 +98,10 @@ void ft_unset(t_mini *mini)
 			new_env[j] = mini->env[i];
 			j++;
 		}
+		else
+		{
+			free(mini->env[i]);
+		}
 		i++;
 	}
 	new_env[j] = NULL;
@@ -144,33 +109,94 @@ void ft_unset(t_mini *mini)
 	mini->env = new_env;
 }
 
+void replace_var_env(char **envp, char *to_found, char *to_replace)
+{
+	int i;
+
+	i = 0;
+	while (envp[i] != NULL)
+	{
+		if (ft_strncmp(envp[i], to_found, ft_strlen(to_found)) == 0)
+		{
+			free(envp[i]);
+			envp[i] = ft_strjoin(to_found, to_replace);
+			break;
+		}
+		i++;
+	}
+}
+
+void update_env(char *pwd, t_mini *mini)
+{
+	int i;
+
+	i = 0;
+	while (mini->env[i] != NULL)
+	{
+		replace_var_env(mini->env, "OLDPWD=", pwd);
+		replace_var_env(mini->env, "PWD=", mini->args[1]);
+		i++;
+		break;
+	}
+}
+
+void update_env_abs(char *pwd, char *home, t_mini *mini)
+{
+	int i;
+
+	i = 0;
+	while (mini->env[i] != NULL)
+	{
+		replace_var_env(mini->env, "OLDPWD=", pwd);
+		replace_var_env(mini->env, "PWD=", home);
+		i++;
+		break;
+	}
+}
+
+char *get_var_env(char **env, char *to_find)
+{
+	int i = 0;
+	while (env[i])
+	{
+		if (ft_strncmp(env[i], to_find, ft_strlen(to_find)) == 0)
+			return (ft_strdup(ft_strchr(env[i], '/') ));
+		i++;
+	}
+	return NULL;
+}
+
 void ft_cd(t_mini *mini)
 {
 	char *home;
 	char *pwd;
 
+	home = get_var_env(mini->env, "HOME=");
 	pwd = getcwd(NULL, 0);
-	home = getenv("HOME");
-	if (pwd == NULL)
+	if (!pwd)
 	{
 		printf("Error: getcwd failed\n");
 		exit(0);
 	}
-	if (mini->args[1] == NULL)
+	if (!mini->args[1])
 	{
-		chdir(home);
+		if (chdir(home) == -1)
+			printf("Error: chdir failed\n");
+		update_env_abs(pwd, home, mini);
 	}
-	else if (chdir(mini->args[1]) == -1)
+	else
 	{
-		printf("Error: chdir failed\n");
+		if (chdir(mini->args[1]) == -1)
+			ft_exit(mini);
+		update_env(pwd, mini);
 	}
+	free(pwd);
+	free(home);
 }
 
 void ft_echo(t_mini *mini)
 {
-	int i;
-
-	i = 1;
+	int i = 1;
 	while (mini->args[i])
 	{
 		printf("%s", mini->args[i]);
@@ -179,125 +205,101 @@ void ft_echo(t_mini *mini)
 			printf(" ");
 	}
 	printf("\n");
-	i = 0;
-	while (mini->args[i])
-	{
-		free(mini->args[i]);
-		i++;
-	}
-	free(mini->args);
 }
 
 void choose_args(t_mini *mini)
 {
-	int i;
-
-	i = 0;
 	mini->args = ft_split(mini->line, ' ');
-	if (mini->args == NULL)
+	if (!mini->args)
 	{
 		printf("Error: split failed\n");
 		exit(0);
 	}
 	if (ft_strncmp(mini->args[0], "echo", 4) == 0)
-	{
 		ft_echo(mini);
-	}
-	else if (ft_strncmp(mini->args[0], "cd" , 2) == 0)
-	{
+	else if (ft_strncmp(mini->args[0], "cd", 2) == 0)
 		ft_cd(mini);
-	}
 	else if (ft_strncmp(mini->args[0], "pwd", 3) == 0)
-	{
-		free_args(mini->args);
 		ft_pwd();
-	}
-	else if (ft_strncmp(mini->args[0], "export", 7) == 0)
-	{
-		free_args(mini->args);
+	else if (ft_strncmp(mini->args[0], "export", 6) == 0)
 		ft_export(mini);
-	}
 	else if (ft_strncmp(mini->args[0], "unset", 5) == 0)
-	{
-		free_args(mini->args);
 		ft_unset(mini);
-	}
 	else if (ft_strncmp(mini->args[0], "env", 3) == 0)
-	{
-		free_args(mini->args);
 		ft_env(mini);
-	}
 	else if (ft_strncmp(mini->args[0], "exit", 4) == 0)
-	{
 		ft_exit(mini);
-	}
 	else
-	{
-		free_args(mini->args);
 		printf("Error: command not found\n");
-	}
-	// else
-	// {
-	// 	ft_execve(mini, args);
-	// }
-//	ft_free((void**)args);
-}
-
-void init_args(t_mini *mini, int ac, char **envp)
-{
-	(void)envp;
-	mini->ac = ac;
+	free_args(mini->args);
 }
 
 void init_envp(t_mini *mini, char **envp)
 {
 	int i;
-	char **env;
 
 	i = 0;
-	env = envp;
-	while (env[i])
+	while (envp[i])
 		i++;
 	mini->env = (char **)malloc(sizeof(char *) * (i + 1));
-	i = 0;
-	while (env[i])
-	{
-		mini->env[i] = env[i];
-		i++;
-	}
+	i = -1;
+	while (envp[++i])
+		mini->env[i] = ft_strdup(envp[i]);
 	mini->env[i] = NULL;
+}
+
+void init_myown_envp(t_mini *mini)
+{
+	int i;
+	char *pwd;
+
+	i = 0;
+	mini->env = (char **)malloc(sizeof(char *) * 3);
+	mini->shlvl = 1;
+	pwd = getcwd(NULL, 0);
+	if (pwd == NULL)
+	{
+		printf("Error: getcwd failed\n");
+		exit(0);
+	}
+	mini->env[0] = ft_strjoin("PWD=", pwd);
+	mini->env[1] = ft_strjoin("SHLVL=", ft_itoa(mini->shlvl));
+	mini->env[2] = NULL;
+	// while (mini->env[i])
+	// {
+	// 	printf("%s\n", mini->env[i]);
+	// 	i++;
+	// }
+	free(pwd);
 }
 
 int main(int ac, char **av, char **envp)
 {
     t_mini *main_mini;
-    char *line;
 
     (void)av;
-    main_mini = (t_mini *)malloc(sizeof(t_mini));
-    init_envp(main_mini, envp);
-    line = NULL;
+    if (ac != 1)
+		return 0;
+	main_mini = (t_mini *)malloc(sizeof(t_mini));
+    if (!envp)
+    	init_myown_envp(main_mini);
+    else
+    	init_envp(main_mini, envp);
+    char *line;
     while (1)
     {
         printf("minishell> ");
         line = readline("");
-        while (line != NULL)
+        if (line)
         {
-        	main_mini->line = ft_strdup(line);
-         	if (main_mini->line && *main_mini->line != '\n')
-          	{
-         		add_history(main_mini->line);
-           		check_line(main_mini->line);
-           		init_args(main_mini, ac, envp);
-           		choose_args(main_mini);
-             	free(main_mini->line);
-             	free(line);
-             	break;
-		 	}
-			printf("\n");
-			free(main_mini->line);
-        	free(line);
-           	line = readline("");
+            main_mini->line = ft_strdup(line);
+            if (main_mini->line && *main_mini->line != '\n')
+            {
+                add_history(main_mini->line);
+                choose_args(main_mini);
+                free(main_mini->line);
+            }
+            free(line);
         }
     }
     return 0;

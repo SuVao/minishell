@@ -23,6 +23,7 @@ typedef struct s_mini
 	char		*line;
 	char		**args;
 	char		**path;
+	int			shlvl;
 	struct s_cmd	*cmd;
 }	t_mini;
 
