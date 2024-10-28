@@ -1,5 +1,6 @@
 
 #include "../inc/minishell.h"
+#include <unistd.h>
 
 void free_args(char **args)
 {
@@ -209,6 +210,8 @@ void ft_echo(t_mini *mini)
 
 void choose_args(t_mini *mini)
 {
+	if (!mini->line)
+		printf("ola\n");
 	mini->args = ft_split(mini->line, ' ');
 	if (!mini->args)
 	{
@@ -273,34 +276,51 @@ void init_myown_envp(t_mini *mini)
 	free(pwd);
 }
 
+void handling_signals(int sig)
+{
+	if (sig == SIGINT)
+	{
+		write(1, "\n", 1);
+		rl_replace_line("", 0);
+        rl_on_new_line();
+        rl_redisplay();
+	}
+}
+
 int main(int ac, char **av, char **envp)
 {
     t_mini *main_mini;
+    char *line;
+    struct sigaction sa;
 
-    (void)av;
-    if (ac != 1)
-		return 0;
+    line = NULL;
+    sa.sa_flags = SA_RESTART;
+    sa.sa_handler = &handling_signals;
+   	sigaction(SIGINT, &sa, NULL);
+    (void)av, (void)ac;
+
 	main_mini = (t_mini *)malloc(sizeof(t_mini));
     if (!envp)
     	init_myown_envp(main_mini);
     else
     	init_envp(main_mini, envp);
-    char *line;
     while (1)
     {
-        printf("minishell> ");
-        line = readline("");
-        if (line)
+        line = readline("minishell> ");
+        if (*line)
         {
             main_mini->line = ft_strdup(line);
+
             if (main_mini->line && *main_mini->line != '\n')
             {
                 add_history(main_mini->line);
                 choose_args(main_mini);
                 free(main_mini->line);
             }
-            free(line);
+            // free(line);
         }
+        free(line);
     }
+    free(main_mini);
     return 0;
 }
