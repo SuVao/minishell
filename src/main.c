@@ -1,6 +1,16 @@
 
 #include "../inc/minishell.h"
-#include <unistd.h>
+char *get_var_env(char **env, char *to_find)
+{
+	int i = 0;
+	while (env[i])
+	{
+		if (ft_strncmp(env[i], to_find, ft_strlen(to_find)) == 0)
+			return (ft_strdup(ft_strchr(env[i], '/') ));
+		i++;
+	}
+	return NULL;
+}
 
 void free_args(char **args)
 {
@@ -9,9 +19,11 @@ void free_args(char **args)
 	while (args[i])
 	{
 		free(args[i]);
+		args[i] = NULL;
 		i++;
 	}
 	free(args);
+	args = NULL;
 }
 
 void check_line(char *line)
@@ -52,11 +64,12 @@ void ft_exit(t_mini *mini)
 
 void ft_pwd()
 {
-	char *pwd = getcwd(NULL, 0);
+	char *pwd;
+	pwd = getcwd(NULL, 0);
 	if (pwd == NULL)
 	{
 		printf("Error: getcwd failed\n");
-		exit(0);
+		return ;
 	}
 	printf("%s\n", pwd);
 	free(pwd);
@@ -66,10 +79,7 @@ void ft_env(t_mini *mini)
 {
 	int i = 0;
 	while (mini->env[i])
-	{
-		printf("%s\n", mini->env[i]);
-		i++;
-	}
+		printf("%s\n", mini->env[i++]);
 }
 
 void ft_export(t_mini *mini)
@@ -130,15 +140,27 @@ void replace_var_env(char **envp, char *to_found, char *to_replace)
 void update_env(char *pwd, t_mini *mini)
 {
 	int i;
+	char *new_pwd;
 
+	new_pwd = NULL;
 	i = 0;
+	if (!pwd)
+	{
+		free(pwd);
+		new_pwd = getcwd(NULL, 0);
+	}
+	new_pwd = ft_strjoin(pwd, mini->args[1]);
+	if (!new_pwd)
+		new_pwd = getcwd(NULL, 0);
 	while (mini->env[i] != NULL)
 	{
-		replace_var_env(mini->env, "OLDPWD=", pwd);
+		replace_var_env(mini->env, "OLDPWD=", new_pwd);
 		replace_var_env(mini->env, "PWD=", mini->args[1]);
 		i++;
 		break;
 	}
+	if (new_pwd)
+		free(new_pwd);
 }
 
 void update_env_abs(char *pwd, char *home, t_mini *mini)
@@ -155,42 +177,111 @@ void update_env_abs(char *pwd, char *home, t_mini *mini)
 	}
 }
 
-char *get_var_env(char **env, char *to_find)
+
+char *encontra_barra(char *s)
 {
-	int i = 0;
-	while (env[i])
-	{
-		if (ft_strncmp(env[i], to_find, ft_strlen(to_find)) == 0)
-			return (ft_strdup(ft_strchr(env[i], '/') ));
+	char *new_pwd;
+	int j;
+	int i;
+
+	new_pwd = NULL;
+	i = 0;
+	while (s[i])
 		i++;
+	while (i > 0)
+	{
+		if (s[i] == '/')
+			break ;
+		i--;
 	}
-	return NULL;
+	new_pwd = malloc(sizeof(char) * (i + 1));
+	if (!new_pwd)
+		return (NULL);
+	j = 0;
+	while (j != i)
+	{
+		new_pwd[j] = s[j];
+		j++;
+	}
+	new_pwd[j] = '\0';
+	return (new_pwd);
+}
+
+void update_env_back_cd(char *new_pwd, char*pwd, t_mini *mini)
+{
+	int i;
+
+	i = 0;
+	while (mini->env[i] != NULL)
+	{
+		replace_var_env(mini->env, "OLDPWD=", pwd);
+		replace_var_env(mini->env, "PWD=", new_pwd);
+		i++;
+		break;
+	}
 }
 
 void ft_cd(t_mini *mini)
 {
 	char *home;
 	char *pwd;
+	char *new_pwd;
 
+	new_pwd = NULL;
 	home = get_var_env(mini->env, "HOME=");
 	pwd = getcwd(NULL, 0);
 	if (!pwd)
 	{
+
+		free(home);
+		free(pwd);
 		printf("Error: getcwd failed\n");
-		exit(0);
+		return ;
 	}
 	if (!mini->args[1])
 	{
 		if (chdir(home) == -1)
+		{
+			if (mini->args)
+				free_args(mini->args);
+			free(home);
+			free(pwd);
 			printf("Error: chdir failed\n");
+			exit(0);
+		}
 		update_env_abs(pwd, home, mini);
+	//	free(mini->args[0]);
 	}
-	else
+	else if (ft_strncmp(mini->args[1], "..", 2) == 0)
+	{
+		new_pwd = encontra_barra(pwd);
+		if (chdir(new_pwd) == -1)
+		{
+			write(2, "Error: chdir failed1\n", 21);
+			//if (mini->args)
+			//	free_args(mini->args);
+			free(pwd);
+			free(home);
+			return;
+		}
+		update_env_back_cd(new_pwd, pwd, mini);
+		free(new_pwd);
+
+	}
+	else if (mini->args[1])
 	{
 		if (chdir(mini->args[1]) == -1)
-			ft_exit(mini);
+		{
+			write(2, "Error: chdir failed2\n", 21);
+			//if (mini->args)
+			//	free_args(mini->args);
+			free(pwd);
+			free(home);
+			return;
+		}
 		update_env(pwd, mini);
 	}
+
 	free(pwd);
 	free(home);
 }
@@ -215,7 +306,7 @@ void choose_args(t_mini *mini)
 	mini->args = ft_split(mini->line, ' ');
 	if (!mini->args)
 	{
-		printf("Error: split failed\n");
+		printf("Error: split failed5\n");
 		exit(0);
 	}
 	if (ft_strncmp(mini->args[0], "echo", 4) == 0)
@@ -234,7 +325,8 @@ void choose_args(t_mini *mini)
 		ft_exit(mini);
 	else
 		printf("Error: command not found\n");
-	free_args(mini->args);
+	if (mini->args)
+		free_args(mini->args);
 }
 
 void init_envp(t_mini *mini, char **envp)
@@ -263,7 +355,7 @@ void init_myown_envp(t_mini *mini)
 	if (pwd == NULL)
 	{
 		printf("Error: getcwd failed\n");
-		exit(0);
+		return ;
 	}
 	mini->env[0] = ft_strjoin("PWD=", pwd);
 	mini->env[1] = ft_strjoin("SHLVL=", ft_itoa(mini->shlvl));
@@ -294,6 +386,7 @@ int main(int ac, char **av, char **envp)
     struct sigaction sa;
 
     line = NULL;
+    ft_bzero(&sa, sizeof(sa));
     sa.sa_flags = SA_RESTART;
     sa.sa_handler = &handling_signals;
    	sigaction(SIGINT, &sa, NULL);
