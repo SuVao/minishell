@@ -8,7 +8,7 @@ LIBFT_DIR= ./libft
 LDFLAGS = -lreadline
 LIBFT = $(LIBFT_DIR)/libft.a
 SRC_FILES= 	main.c\
-			main2.c\
+			env.c\
 
 SRCS= $(addprefix $(SRC_DIR)/,$(SRC_FILES))
 OBJ= $(addprefix $(OBJ_DIR)/,$(SRC_FILES:.c=.o))

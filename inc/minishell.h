@@ -62,6 +62,16 @@ void	ft_unset(t_mini *mini);
 void	choose_args(t_mini *mini);
 void	init_args(t_mini *mini, int ac, char **envp);
 void	init_envp(t_mini *mini, char **envp);
+void 	replace_var_env(char **envp, char *to_found, char *to_replace);
+void 	update_env(char *new_pwd, char *pwd,t_mini *mini);
+void 	update_env_abs(char *pwd, char *home, t_mini *mini);
+char 	*encontra_barra(char *s);
+void 	update_env_back_cd(char *new_pwd, char*pwd, t_mini *mini);
+void 	ft_cd(t_mini *mini);
+char 	*get_var_env(char **env, char *to_find);
+char	*path_find(char **envp, char *cmd);
+void 	ft_exec(t_mini *mini);
+void	free_all(char **matrix, char *str);
 
 
 #endif
