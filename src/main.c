@@ -1,6 +1,5 @@
 
 #include "../inc/minishell.h"
-#include <sys/wait.h>
 
 void	free_all(char **matrix, char *str)
 {
@@ -258,8 +257,10 @@ void init_myown_envp(t_mini *mini)
 	free(pwd);
 }
 
-void handling_signals(int sig)
+void handling_signals(int sig, siginfo_t *info, void *context)
 {
+	(void)info;
+	(void)context;
 	if (sig == SIGINT)
 	{
 		write(1, "\n", 1);
@@ -278,10 +279,12 @@ int main(int ac, char **av, char **envp)
     line = NULL;
     ft_bzero(&sa, sizeof(sa));
     sa.sa_flags = SA_RESTART;
-    sa.sa_handler = &handling_signals;
+    sa.sa_sigaction = &handling_signals;
    	sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTSTP, &sa, NULL);
     (void)av, (void)ac;
 
+    signal(SIGQUIT, SIG_IGN);
 	main_mini = (t_mini *)malloc(sizeof(t_mini));
     if (!envp)
     	init_myown_envp(main_mini);
@@ -290,17 +293,20 @@ int main(int ac, char **av, char **envp)
     while (1)
     {
         line = readline("minishell> ");
+        if (!line)
+        {
+           	printf("Exiting of shell!\n");
+           	break ;
+        }
         if (*line)
         {
             main_mini->line = ft_strdup(line);
-
             if (main_mini->line && *main_mini->line != '\n')
             {
                 add_history(main_mini->line);
                 choose_args(main_mini);
                 free(main_mini->line);
             }
-            // free(line);
         }
         free(line);
     }
