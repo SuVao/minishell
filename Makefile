@@ -9,6 +9,8 @@ LDFLAGS = -lreadline
 LIBFT = $(LIBFT_DIR)/libft.a
 SRC_FILES= 	main.c\
 			env.c\
+			tokenize.c \
+			free_args.c \
 
 SRCS= $(addprefix $(SRC_DIR)/,$(SRC_FILES))
 OBJ= $(addprefix $(OBJ_DIR)/,$(SRC_FILES:.c=.o))

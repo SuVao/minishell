@@ -1,0 +1,76 @@
+void execute_ast(t_ast_node *node)
+{
+    if (!node)
+        return;
+
+    if (node->type == PIPE)
+    {
+        // Set up pipe between left and right children
+        int pipe_fd[2];
+        pipe(pipe_fd);
+
+        if (fork() == 0) {
+            // Left child process
+            close(pipe_fd[0]); // Close unused read end
+            dup2(pipe_fd[1], STDOUT_FILENO); // Redirect stdout to write end
+            close(pipe_fd[1]);
+            execute_ast(node->left);
+            exit(0);
+        }
+
+        if (fork() == 0) {
+            // Right child process
+            close(pipe_fd[1]); // Close unused write end
+            dup2(pipe_fd[0], STDIN_FILENO); // Redirect stdin to read end
+            close(pipe_fd[0]);
+            execute_ast(node->right);
+            exit(0);
+        }
+
+        // Parent process closes both ends of the pipe and waits
+        close(pipe_fd[0]);
+        close(pipe_fd[1]);
+        wait(NULL);
+        wait(NULL);
+    }
+    else if (node->type == REDIR_IN || node->type == REDIR_OUT || node->type == REDIR_APPEND)
+    {
+        // Handle input/output redirection based on type
+        int fd;
+        if (node->type == REDIR_OUT)
+            fd = open(node->value, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        else if (node->type == REDIR_APPEND)
+            fd = open(node->value, O_WRONLY | O_CREAT | O_APPEND, 0644);
+        else if (node->type == REDIR_IN)
+            fd = open(node->value, O_RDONLY);
+
+        if (fd == -1) {
+            perror("open");
+            return;
+        }
+
+        if (fork() == 0) {
+            // Child process
+            if (node->type == REDIR_IN)
+    			dup2(fd, STDIN_FILENO);  // Redirect fd to stdin for input redirection
+			else
+    			dup2(fd, STDOUT_FILENO);
+            close(fd);
+            execute_ast(node->left);
+            exit(0);
+        }
+
+        close(fd);
+        wait(NULL);
+    }
+    else if (node->type == CMD)
+    {
+        // Execute command with arguments
+        if (fork() == 0) {
+            execvp(node->args[0], node->args);
+            perror("execvp"); // In case exec fails
+            exit(1);
+        }
+        wait(NULL);
+    }
+}

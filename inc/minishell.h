@@ -14,42 +14,61 @@
 # include <readline/readline.h>
 # include <readline/history.h>
 # include "../libft/libft.h"
+# include <stdbool.h>
+
+# define MAX_TOKENS 300
+# define CMD 1
+# define PIPE 2
+# define REDIR_IN 3
+# define REDIR_OUT 4
+# define REDIR_APPEND 5
+# define HEREDOC 6
+# define FILE 7
+# define BUFFER_SIZE 1024
 
 typedef struct s_mini
 {
 	int			ac;
-	char		**av;
+	char		**new_tokens;
+	char		**exp_tokens;
 	char		**env;
 	char		*line;
 	char		**args;
-	char		**path;
 	int			shlvl;
-	struct s_cmd	*cmd;
 }	t_mini;
 
-typedef struct s_cmd
+typedef struct s_ast_node
 {
-	int				builtin;
-	int				pipe;
-	int				redir;
-	int				redir_type;
-	int				redir_fd;
-	int				dollar;
-	int				quote;
-	int				double_quote;
-	int				index;
-	struct s_cmd	*next;
-}	t_cmd;
+	int		type;//	Type of node
+	char	*cmd; //used for command nodes
+	char	**args; //arguments for command nodes
+	char	*file; //in case of redirections
+	char	*delimiter; // for here documents
+	struct s_ast_node *left;
+	struct s_ast_node *right;
+} t_ast_node;
 
-typedef struct s_buildin
+typedef struct
 {
-	void	(*ft_cd)(t_mini *mini);
-	void	(*ft_pwd)();
-	void	(*ft_env)(t_mini *mini);
-	void	(*ft_export)(t_mini *mini);
-	void	(*ft_unset)(t_mini *mini);
-	void	(*ft_exit)(t_mini *mini);
-} t_buildin;
+	char	*exp;
+	char	*var_start;
+	char	*temp;
+	int		i;
+	int		d_quote;
+	int		s_quote;
+	int		len;
+	int		start;
+}	expand_data;
+
+typedef struct
+{
+	char **t;
+	int	i;
+	int	start;
+	int	ti;
+	int	d_quote;
+	int	s_quote;
+}	tokenize_data;
 
 void	ft_free(void **args);
 void	ft_free_env(char **env);
@@ -71,7 +90,9 @@ void 	ft_cd(t_mini *mini);
 char 	*get_var_env(char **env, char *to_find);
 char	*path_find(char **envp, char *cmd);
 void 	ft_exec(t_mini *mini);
-void	free_all(char **matrix, char *str);
+void	free_all1(char **matrix, char *str);
+char	**tokenize(char *str);
+void 	free_all(char **tokens, char *input);
 
 
 #endif

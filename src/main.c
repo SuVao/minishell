@@ -1,13 +1,8 @@
 
 #include "../inc/minishell.h"
+#include <stdbool.h>
 
-void	free_all(char **matrix, char *str)
-{
-	if (matrix)
-		free_args(matrix);
-	if (str)
-		free(str);
-}
+extern char **envp;
 
 void free_args(char **args)
 {
@@ -270,46 +265,183 @@ void handling_signals(int sig, siginfo_t *info, void *context)
 	}
 }
 
-int main(int ac, char **av, char **envp)
+// int main(int ac, char **av, char **envp)
+// {
+//     t_mini *main_mini;
+//     char *line;
+//     struct sigaction sa;
+
+//     line = NULL;
+//     ft_bzero(&sa, sizeof(sa));
+//     sa.sa_flags = SA_RESTART;
+//     sa.sa_sigaction = &handling_signals;
+//    	sigaction(SIGINT, &sa, NULL);
+//     sigaction(SIGTSTP, &sa, NULL);
+//     (void)av, (void)ac;
+
+//     signal(SIGQUIT, SIG_IGN);
+// 	main_mini = (t_mini *)malloc(sizeof(t_mini));
+//     if (!envp)
+//     	init_myown_envp(main_mini);
+//     else
+//     	init_envp(main_mini, envp);
+//     while (1)
+//     {
+//         line = readline("minishell> ");
+//         if (!line)
+//         {
+//            	printf("Exiting of shell!\n");
+//            	break ;
+//         }
+//         if (*line)
+//         {
+//             main_mini->line = ft_strdup(line);
+//             if (main_mini->line && *main_mini->line != '\n')
+//             {
+//                 add_history(main_mini->line);
+//                 choose_args(main_mini);
+//                 free(main_mini->line);
+//             }
+//         }
+//         free(line);
+//     }
+//     free(main_mini);
+//     return 0;
+// }
+
+bool check_for_unclosed_quotes(char *input)
 {
-    t_mini *main_mini;
-    char *line;
-    struct sigaction sa;
+	int i;
+	int single_quote_open;
+	int double_quote_open;
 
-    line = NULL;
-    ft_bzero(&sa, sizeof(sa));
-    sa.sa_flags = SA_RESTART;
-    sa.sa_sigaction = &handling_signals;
-   	sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGTSTP, &sa, NULL);
-    (void)av, (void)ac;
+	i = 0;
+	single_quote_open = 0;
+	double_quote_open = 0;
+	while (input[i])
+	{
+		if (input[i] == '\'' && !double_quote_open)
+			single_quote_open = !single_quote_open;
+		else if (input[i] == '"' && !single_quote_open)
+			double_quote_open = !double_quote_open;
+		i++;
+	}
+	if (single_quote_open || double_quote_open)
+		return (false);
+	return (true);
+}
 
-    signal(SIGQUIT, SIG_IGN);
-	main_mini = (t_mini *)malloc(sizeof(t_mini));
-    if (!envp)
-    	init_myown_envp(main_mini);
+bool	if_stats_input(char *input)
+{	//false para break //true para continue
+	if (!input)
+	{
+		printf("exit\n");
+		return (false);
+	}
+	if (!*input)
+	{
+		free(input);
+		return (true);
+	}
+	if (*input)
+	{
+		add_history(input);
+		if (ft_strcmp(input, "exit") == 0)
+		{
+			free(input);
+			printf("exit\n");
+			return (false);
+		}
+	}
+	return (false);
+}
+
+int semicolon_checker(char *str)
+{
+	int	i;
+	int	s_quote;
+	int	d_quote;
+
+	i = 0;
+	s_quote = 0;
+	d_quote = 0;
+	while (str[i])
+	{
+		if (str[i] == '"' && !s_quote)
+			d_quote = !d_quote;
+		else if (str[i] == '\'' && !d_quote)
+			s_quote = !s_quote;
+		else if (str[i] == ';' && !s_quote && !d_quote)
+			return (false);
+		else if (str[i] == '\\' && !s_quote && !d_quote)
+			return (false);
+		i++;
+	}
+	return (true);
+}
+
+bool checker_quotes(char *input)
+{
+	if (!check_for_unclosed_quotes(input))
+	{
+		write(2, "Error unclosed quotes\n", 22);
+		free(input);
+		return (false);
+	}
+	if (!semicolon_checker(input))
+	{
+		write(2, "Error semicolon not supported\n", 30);
+		free(input);
+		return (false);
+	}
+	return (true);
+}
+
+void	init_mini(t_mini *mini)
+{
+	mini->ac = 0;
+	mini->new_tokens = NULL;
+	mini->exp_tokens = NULL;
+	mini->env = NULL;
+	mini->line = NULL;
+	mini->args = NULL;
+	mini->shlvl = 0;
+}
+
+int main(int ac, char **av, char **env)
+{
+	int 		i;
+	t_ast_node *ast_root;
+	t_mini		*mini;
+
+	mini = malloc(sizeof(t_mini*));
+	(void)ac;
+	(void)av;
+	mini = NULL;
+	ast_root = NULL;
+	init_mini(mini);
+	i = 0;
+	if (!envp)
+   		init_myown_envp(mini);
     else
-    	init_envp(main_mini, envp);
-    while (1)
-    {
-        line = readline("minishell> ");
-        if (!line)
-        {
-           	printf("Exiting of shell!\n");
-           	break ;
-        }
-        if (*line)
-        {
-            main_mini->line = ft_strdup(line);
-            if (main_mini->line && *main_mini->line != '\n')
-            {
-                add_history(main_mini->line);
-                choose_args(main_mini);
-                free(main_mini->line);
-            }
-        }
-        free(line);
-    }
-    free(main_mini);
-    return 0;
+   		init_envp(mini, envp);
+	while (1)
+	{
+		mini->line = readline("minishell> ");
+		if (!if_stats_input(mini->line))
+			break;
+		if (!checker_quotes(mini->line))
+			continue;
+
+		i = 0;
+		mini->new_tokens = tokenize(mini->line);
+		if (!mini->new_tokens)
+		{
+    		free(mini->line);
+    		perror("Error in tokenize");
+    		continue;
+		}
+	}
+	free(mini);
+	return (0);
 }
