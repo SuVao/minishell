@@ -6,7 +6,6 @@ char	*ft_strndup(const char *s, size_t n)
 	size_t	i;
 	char	*new;
 
-
 	if (!s || !*s)
 		return (NULL);
 	new = malloc(sizeof(char) * (n + 1));

@@ -70,13 +70,11 @@ typedef struct
 	int	s_quote;
 }	tokenize_data;
 
-void	ft_free(void **args);
 void	ft_free_env(char **env);
 void	ft_exit(t_mini *mini);
 void	ft_pwd();
 void	ft_env(t_mini *mini);
 void	ft_export(t_mini *mini);
-void	free_args(char **args);
 void	ft_unset(t_mini *mini);
 void	choose_args(t_mini *mini);
 void	init_args(t_mini *mini, int ac, char **envp);
@@ -90,9 +88,9 @@ void 	ft_cd(t_mini *mini);
 char 	*get_var_env(char **env, char *to_find);
 char	*path_find(char **envp, char *cmd);
 void 	ft_exec(t_mini *mini);
-void	free_all1(char **matrix, char *str);
 char	**tokenize(char *str);
 void 	free_all(char **tokens, char *input);
-
+void 	free_2_args(char **args1, char **args2);
+void	free_args(char **args);
 
 #endif

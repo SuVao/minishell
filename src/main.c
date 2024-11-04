@@ -1,23 +1,7 @@
 
 #include "../inc/minishell.h"
-#include <stdbool.h>
 
-extern char **envp;
-
-void free_args(char **args)
-{
-	int i = 0;
-	if (!args)
-		return;
-	while (args[i])
-	{
-		free(args[i]);
-		args[i] = NULL;
-		i++;
-	}
-	free(args);
-	args = NULL;
-}
+char **envp;
 
 char	*path_find(char **envp, char *cmd)
 {
@@ -226,9 +210,12 @@ void init_envp(t_mini *mini, char **envp)
 	while (envp[i])
 		i++;
 	mini->env = (char **)malloc(sizeof(char *) * (i + 1));
-	i = -1;
-	while (envp[++i])
+	i = 0;
+	while (envp[i])
+	{
 		mini->env[i] = ft_strdup(envp[i]);
+		i++;
+	}
 	mini->env[i] = NULL;
 }
 
@@ -320,7 +307,7 @@ bool check_for_unclosed_quotes(char *input)
 	double_quote_open = 0;
 	while (input[i])
 	{
-		if (input[i] == '\'' && !double_quote_open)
+		if (input[i] == '\'' && !double_quote_open) // var = 0; !var = 1;
 			single_quote_open = !single_quote_open;
 		else if (input[i] == '"' && !single_quote_open)
 			double_quote_open = !double_quote_open;
@@ -408,23 +395,9 @@ void	init_mini(t_mini *mini)
 	mini->shlvl = 0;
 }
 
-int main(int ac, char **av, char **env)
+void	shell_looping(t_mini *mini, t_ast_node *ast_root)
 {
-	int 		i;
-	t_ast_node *ast_root;
-	t_mini		*mini;
-
-	mini = malloc(sizeof(t_mini*));
-	(void)ac;
-	(void)av;
-	mini = NULL;
-	ast_root = NULL;
-	init_mini(mini);
-	i = 0;
-	if (!envp)
-   		init_myown_envp(mini);
-    else
-   		init_envp(mini, envp);
+	(void)ast_root;
 	while (1)
 	{
 		mini->line = readline("minishell> ");
@@ -433,15 +406,44 @@ int main(int ac, char **av, char **env)
 		if (!checker_quotes(mini->line))
 			continue;
 
-		i = 0;
 		mini->new_tokens = tokenize(mini->line);
 		if (!mini->new_tokens)
 		{
     		free(mini->line);
-    		perror("Error in tokenize");
+    		write(2, "Error in tokenize", 18);
     		continue;
 		}
+		mini->exp_tokens = expand_vars(mini->new_tokens, envp);
+		if (!mini->exp_tokens)
+		{
+			free_2_all(mini->new_tokens, mini->env);
+			write(2, "Error in expand_vars", 21);
+			continue;
+		}
+
 	}
+}
+
+
+int main(int ac, char **av, char **env)
+{
+	t_ast_node *ast_root;
+	t_mini		*mini;
+
+	envp = env;
+	mini = malloc(sizeof(t_mini));
+	if (!mini)
+		return (0);
+	(void)ac;
+	(void)av;
+//ft_bzero(mini, (size_t)sizeof(mini));
+	init_mini(mini);
+	ast_root = NULL;
+	if (!env)
+   		init_myown_envp(mini);
+    else
+   		init_envp(mini, envp);
+	shell_looping(mini, ast_root);
 	free(mini);
 	return (0);
 }
