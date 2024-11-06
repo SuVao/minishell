@@ -11,6 +11,14 @@ SRC_FILES= 	main.c\
 			env.c\
 			tokenize.c \
 			free_args.c \
+			exp_tokens.c \
+			create_ast.c \
+			execute_ast.c \
+			free_ast.c \
+			get_path.c \
+			here_doc.c \
+			slice_tokens.c \
+			find_operators.c \
 
 SRCS= $(addprefix $(SRC_DIR)/,$(SRC_FILES))
 OBJ= $(addprefix $(OBJ_DIR)/,$(SRC_FILES:.c=.o))

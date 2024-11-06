@@ -340,7 +340,7 @@ bool	if_stats_input(char *input)
 			return (false);
 		}
 	}
-	return (false);
+	return (true);
 }
 
 int semicolon_checker(char *str)
@@ -420,7 +420,9 @@ void	shell_looping(t_mini *mini, t_ast_node *ast_root)
 			write(2, "Error in expand_vars", 21);
 			continue;
 		}
-
+		ast_root = parse_tokens(mini->exp_tokens);
+		execute_ast(ast_root);
+		free_all(mini->exp_tokens, mini->line);
 	}
 }
 
@@ -444,6 +446,7 @@ int main(int ac, char **av, char **env)
     else
    		init_envp(mini, envp);
 	shell_looping(mini, ast_root);
+	free(ast_root);
 	free(mini);
 	return (0);
 }

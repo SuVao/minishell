@@ -39,7 +39,7 @@ static void	finish_loop(char *str, tokenize_data *d)
 	if (str[d->i] == ' ' && !(d->d_quote) && !(d->s_quote))
 	{
 		if (d->i > d->start)
-			add_token(d->t, ft_strndup(str + d->start, d->i - d->start), &d->ti);
+			add_token(d->t, strndup(str + d->start, d->i - d->start), &d->ti);
 		d->i++;
 		d->start = d->i;
 	}
@@ -86,7 +86,7 @@ char	**tokenize(char *str)
 		finish_loop(str, &d);
 	}
 	if (d.i > d.start)
-		add_token(d.t, ft_strndup(str + d.start, d.i - d.start), &d.ti);
+		add_token(d.t, strndup(str + d.start, d.i - d.start), &d.ti);
 	d.t[d.ti] = NULL;
 	return (d.t);
 }
