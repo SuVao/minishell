@@ -115,5 +115,7 @@ void			free_ast(t_ast_node *node);
 int				noredirs_orheredoc_singlestdin(t_ast_node *node);
 void			handle_redirections(t_ast_node *node);
 void			exec(t_ast_node *node);
+void			ft_close_all_fds(void);
+void			ft_close(int fd);
 
 #endif

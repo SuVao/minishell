@@ -27,5 +27,6 @@ int	here_doc(char *str)
 	close(fd);
 	fd = open("temp.txt", O_RDONLY);
 	unlink("temp.txt");
+	ft_close_all_fds();
 	return (fd);
 }

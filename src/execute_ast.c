@@ -99,6 +99,24 @@ int	noredirs_orheredoc_singlestdin(t_ast_node *node)
 	return (1);
 }
 
+void	ft_close(int fd)
+{
+	if (fd > 2)
+		close(fd);
+}
+
+void	ft_close_all_fds(void)
+{
+	int	fd;
+
+	fd = 3;
+	while (fd < 1024)
+	{
+		close(fd);
+		fd ++;
+	}
+}
+
 void	execute_ast(t_ast_node *node)
 {
 	int i;
@@ -137,6 +155,7 @@ void	execute_ast(t_ast_node *node)
 		}
 		// while (i > 3)
 		// 	close(pipe_fd[i--]);
+		ft_close_all_fds();
 		close(pipe_fd[0]);
 		close(pipe_fd[1]);
 
