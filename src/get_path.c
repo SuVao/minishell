@@ -51,7 +51,6 @@ char	*get_path(char *cmd)
 		path_part = ft_strjoin(allpath[i], "/");
 		exec = ft_strjoin(path_part, cmd);
 		free(path_part);
-
 		if (access(exec, F_OK | X_OK) == 0)  // Check if the executable exists and is executable
 		{
 			ft_free(allpath);

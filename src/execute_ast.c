@@ -6,21 +6,17 @@ extern char **environ;
 void	exec(t_ast_node *node)
 {
 	char	*path;
-	char 	*cmd;
 
-	cmd = NULL;
 	path = get_path(node->cmd); // fazer o get path com environment global variable
 	if (!path)
 	{
 		perror("Command not found");
 		exit(EXIT_FAILURE);
 	}
-	cmd = path;
-	free(path);
 	execve(path, node->args, environ);
 	perror("execve error");
-	/* free(path); */
-	/* exit(EXIT_FAILURE); */
+	free(path);
+	exit(EXIT_FAILURE);
 }
 
 void	handle_redirections(t_ast_node *node)
@@ -49,7 +45,10 @@ void	handle_redirections(t_ast_node *node)
 			if (fork() == 0)
 				exec(node);
 			else
+			{
+				ft_close_all_fds();
 				wait(NULL);
+			}
 		}
 		else if (redir->type == REDIR_APPEND)
 		{
@@ -117,20 +116,82 @@ void	ft_close_all_fds(void)
 	}
 }
 
+// void	execute_ast(t_ast_node *node)
+// {
+// 	if (!node)
+// 		return ;
+// 	if (node->type == PIPE) // por loop para fechar fds // por fds numa estrutura
+// 	{
+// 		int	pipe_fd[2];
+
+// 		if (pipe(pipe_fd) == -1)
+// 		{
+// 			perror("Error pipe");
+// 			ft_close_all_fds();
+// 			return;
+// 		}
+
+// 		if (fork() == 0)
+// 		{
+// 			dup2(pipe_fd[1], STDOUT_FILENO);
+// 			close(pipe_fd[0]);
+// 			close(pipe_fd[1]);
+// 			execute_ast(node->left);
+// 			ft_close_all_fds();
+// 			exit(EXIT_FAILURE);
+// 		}
+// 		else
+// 		{
+// 			if (fork() == 0)
+// 			{
+// 				dup2(pipe_fd[0], STDIN_FILENO);
+// 				close(pipe_fd[1]);
+// 				close(pipe_fd[0]);
+// 				execute_ast(node->right);
+// 				ft_close_all_fds();
+// 				exit(EXIT_FAILURE);
+// 			}
+// 		}
+// 		// while (i > 3)
+// 		// 	close(pipe_fd[i--]);
+// 		close(pipe_fd[0]);
+// 		close(pipe_fd[1]);
+
+// 		wait(NULL);
+// 		wait(NULL);
+// 		ft_close_all_fds();
+// 		return;
+// 	}
+// 	if (node->type == CMD)
+// 	{
+// 		if (fork() == 0)
+// 		{
+// 			handle_redirections(node);
+// 			if (!noredirs_orheredoc_singlestdin(node))
+// 				exec(node);
+// 			else
+// 				exit(EXIT_FAILURE);
+// 		}
+// 		else
+// 		{
+// 			ft_close_all_fds();
+// 			wait(NULL);
+// 		}
+// 	}
+// }
+
+
 void	execute_ast(t_ast_node *node)
 {
-	int i;
-
-	i = 1024;
 	if (!node)
 		return ;
-	if (node->type == PIPE) // por loop para fechar fds // por fds numa estrutura
+	if (node->type == PIPE)
 	{
 		int	pipe_fd[2];
-
 		if (pipe(pipe_fd) == -1)
 		{
-			perror("Error pipe");
+			perror("Error creating pipe");
+			ft_close_all_fds();
 			return;
 		}
 
@@ -140,6 +201,7 @@ void	execute_ast(t_ast_node *node)
 			close(pipe_fd[0]);
 			close(pipe_fd[1]);
 			execute_ast(node->left);
+			ft_close_all_fds();
 			exit(EXIT_FAILURE);
 		}
 		else
@@ -150,17 +212,15 @@ void	execute_ast(t_ast_node *node)
 				close(pipe_fd[1]);
 				close(pipe_fd[0]);
 				execute_ast(node->right);
+				ft_close_all_fds();
 				exit(EXIT_FAILURE);
 			}
+			close(pipe_fd[0]);
+			close(pipe_fd[1]);
+			wait(NULL);
+			wait(NULL);
 		}
-		// while (i > 3)
-		// 	close(pipe_fd[i--]);
 		ft_close_all_fds();
-		close(pipe_fd[0]);
-		close(pipe_fd[1]);
-
-		wait(NULL);
-		wait(NULL);
 		return;
 	}
 	if (node->type == CMD)
@@ -175,8 +235,7 @@ void	execute_ast(t_ast_node *node)
 		}
 		else
 		{
-			// while (i > 3)
-			// 	close(pipe_fd[i--]);
+			ft_close_all_fds();
 			wait(NULL);
 		}
 	}

@@ -117,5 +117,8 @@ void			handle_redirections(t_ast_node *node);
 void			exec(t_ast_node *node);
 void			ft_close_all_fds(void);
 void			ft_close(int fd);
+bool 			check_for_unclosed_quotes(char *input);
+int 			semicolon_checker(char *str);
+bool 			checker_quotes(char *input);
 
 #endif

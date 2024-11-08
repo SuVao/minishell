@@ -22,7 +22,7 @@ static char	*replace(char *var_name, char **env_copy)
 		i++;
 	}
 	free(var_name);
-	return (strdup(""));
+	return (ft_strdup(""));
 }
 
 static void	token_expand(expand_data *d, char *str, char **env_copy)
@@ -35,7 +35,7 @@ static void	token_expand(expand_data *d, char *str, char **env_copy)
 		d->i++;
 		d->var_start = ft_strndup(&str[d->start], d->i - d->start + 1);
 		d->temp = replace(d->var_start, env_copy);
-		d->exp = realloc(d->exp, ft_strlen(d->exp) + ft_strlen(d->temp) + 1);
+		d->exp = ft_realloc(d->exp, ft_strlen(d->exp) + ft_strlen(d->temp) + 1, ft_strlen(d->exp)+1);
 		strcat(d->exp, d->temp);
 		free(d->temp);
 	}
@@ -60,7 +60,7 @@ static char	*expand_var(char *str, char **env_copy)
 		else
 		{
 			d.len = ft_strlen(d.exp);
-			d.exp = realloc(d.exp, d.len + 2);
+			d.exp = (char *)ft_realloc(d.exp, d.len + 2, ft_strlen(d.exp)+1);
 			d.exp[d.len] = str[d.i];
 			d.exp[d.len + 1] = '\0';
 		}
