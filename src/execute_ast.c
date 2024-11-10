@@ -13,6 +13,7 @@ void	exec(t_ast_node *node)
 		perror("Command not found");
 		exit(EXIT_FAILURE);
 	}
+	ft_close_all_fds();
 	execve(path, node->args, environ);
 	perror("execve error");
 	free(path);
@@ -46,7 +47,7 @@ void	handle_redirections(t_ast_node *node)
 				exec(node);
 			else
 			{
-				ft_close_all_fds();
+			//	ft_close_all_fds();
 				wait(NULL);
 			}
 		}
@@ -60,7 +61,9 @@ void	handle_redirections(t_ast_node *node)
 			if (fork() == 0)
 				exec(node);
 			else
+			{
 				wait(NULL);
+			}
 		}
 		else if (redir->type == HEREDOC)
 		{
@@ -70,6 +73,7 @@ void	handle_redirections(t_ast_node *node)
 		}
 		redir = redir->next;
 	}
+	ft_close_all_fds();
 }
 
 int	noredirs_orheredoc_singlestdin(t_ast_node *node)
@@ -191,7 +195,7 @@ void	execute_ast(t_ast_node *node)
 		if (pipe(pipe_fd) == -1)
 		{
 			perror("Error creating pipe");
-			ft_close_all_fds();
+		//	ft_close_all_fds();
 			return;
 		}
 
@@ -201,7 +205,7 @@ void	execute_ast(t_ast_node *node)
 			close(pipe_fd[0]);
 			close(pipe_fd[1]);
 			execute_ast(node->left);
-			ft_close_all_fds();
+		//	ft_close_all_fds();
 			exit(EXIT_FAILURE);
 		}
 		else
@@ -212,7 +216,7 @@ void	execute_ast(t_ast_node *node)
 				close(pipe_fd[1]);
 				close(pipe_fd[0]);
 				execute_ast(node->right);
-				ft_close_all_fds();
+			//	ft_close_all_fds();
 				exit(EXIT_FAILURE);
 			}
 			close(pipe_fd[0]);
@@ -220,7 +224,7 @@ void	execute_ast(t_ast_node *node)
 			wait(NULL);
 			wait(NULL);
 		}
-		ft_close_all_fds();
+	//	ft_close_all_fds();
 		return;
 	}
 	if (node->type == CMD)
@@ -235,7 +239,7 @@ void	execute_ast(t_ast_node *node)
 		}
 		else
 		{
-			ft_close_all_fds();
+		//	ft_close_all_fds();
 			wait(NULL);
 		}
 	}

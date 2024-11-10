@@ -29,9 +29,8 @@ int	here_doc(char *str)
 	if (fd == -1)
     {
         perror("Failed to reopen temporary file");
-        return -1;
+        return (-1);
     }
 	unlink("temp.txt");
-	ft_close_all_fds();
 	return (fd);
 }
