@@ -5,13 +5,17 @@ void free_all(char **tokens, char *input)
 	int i;
 
 	i = 0;
-	while (tokens[i])
+	if (tokens)
 	{
-		free(tokens[i]);
-		i++;
+		while (tokens[i])
+		{
+			free(tokens[i]);
+			i++;
+		}
+		free(tokens);
 	}
-	free(tokens);
-	free(input);
+	if (input)
+		free(input);
 }
 
 void free_args(char **args)

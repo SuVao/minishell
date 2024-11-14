@@ -1,23 +1,26 @@
 
-#include "../inc/minishell.h"
+#include "../../inc/minishell.h"
+
 
 extern char **environ;
 
-void	exec(t_ast_node *node)
+void	exec(t_ast_node *node, t_mini *mini)
 {
 	char	*path;
 
+	/* if (ft_strncmp(node->cmd, "cd", 2) == 0 && !node->cmd[2])
+		ft_cd(node, mini); */
 	path = get_path(node->cmd); // fazer o get path com environment global variable
 	if (!path)
 	{
-		perror("Command not found");
+		/* perror("Command not found"); */
 		exit(EXIT_FAILURE);
 	}
-	ft_close_all_fds();
 	execve(path, node->args, environ);
 	perror("execve error");
-	free(path);
-	exit(EXIT_FAILURE);
+	// free(path);
+	// exit(EXIT_FAILURE);
+	ft_close_all_fds(mini);
 }
 
 void	handle_redirections(t_ast_node *node)
@@ -28,11 +31,16 @@ void	handle_redirections(t_ast_node *node)
 	redir = node->redirs;
 	while (redir)
 	{
+		/* printf("tokens: %s\n", redir->target); */
 		if (redir->type == REDIR_IN)
 		{
 			fd = open(redir->target, O_RDONLY);
 			if (fd == -1)
+			{
 				perror("failed to open input file");
+				close(fd);
+				exit(EXIT_FAILURE);
+			}
 			dup2(fd, STDIN_FILENO);
 			close(fd);
 		}
@@ -40,30 +48,25 @@ void	handle_redirections(t_ast_node *node)
 		{
 			fd = open(redir->target, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 			if (fd == -1)
+			{
 				perror("failed to open output file");
+				close(fd);
+				exit(EXIT_FAILURE);
+			}
 			dup2(fd, STDOUT_FILENO);
 			close(fd);
-			if (fork() == 0)
-				exec(node);
-			else
-			{
-			//	ft_close_all_fds();
-				wait(NULL);
-			}
 		}
 		else if (redir->type == REDIR_APPEND)
 		{
 			fd = open(redir->target, O_WRONLY | O_CREAT | O_APPEND, 0644);
 			if (fd == -1)
+			{
 				perror("failed to open output file for append");
+				close(fd);
+				exit(EXIT_FAILURE);
+			}
 			dup2(fd, STDOUT_FILENO);
 			close(fd);
-			if (fork() == 0)
-				exec(node);
-			else
-			{
-				wait(NULL);
-			}
 		}
 		else if (redir->type == HEREDOC)
 		{
@@ -73,7 +76,6 @@ void	handle_redirections(t_ast_node *node)
 		}
 		redir = redir->next;
 	}
-	ft_close_all_fds();
 }
 
 int	noredirs_orheredoc_singlestdin(t_ast_node *node)
@@ -108,103 +110,59 @@ void	ft_close(int fd)
 		close(fd);
 }
 
-void	ft_close_all_fds(void)
+void	ft_close_all_fds(t_mini *mini)
 {
 	int	fd;
 
+	(void)mini;
 	fd = 3;
 	while (fd < 1024)
 	{
 		close(fd);
-		fd ++;
+		fd++;
 	}
 }
 
-// void	execute_ast(t_ast_node *node)
-// {
-// 	if (!node)
-// 		return ;
-// 	if (node->type == PIPE) // por loop para fechar fds // por fds numa estrutura
-// 	{
-// 		int	pipe_fd[2];
-
-// 		if (pipe(pipe_fd) == -1)
-// 		{
-// 			perror("Error pipe");
-// 			ft_close_all_fds();
-// 			return;
-// 		}
-
-// 		if (fork() == 0)
-// 		{
-// 			dup2(pipe_fd[1], STDOUT_FILENO);
-// 			close(pipe_fd[0]);
-// 			close(pipe_fd[1]);
-// 			execute_ast(node->left);
-// 			ft_close_all_fds();
-// 			exit(EXIT_FAILURE);
-// 		}
-// 		else
-// 		{
-// 			if (fork() == 0)
-// 			{
-// 				dup2(pipe_fd[0], STDIN_FILENO);
-// 				close(pipe_fd[1]);
-// 				close(pipe_fd[0]);
-// 				execute_ast(node->right);
-// 				ft_close_all_fds();
-// 				exit(EXIT_FAILURE);
-// 			}
-// 		}
-// 		// while (i > 3)
-// 		// 	close(pipe_fd[i--]);
-// 		close(pipe_fd[0]);
-// 		close(pipe_fd[1]);
-
-// 		wait(NULL);
-// 		wait(NULL);
-// 		ft_close_all_fds();
-// 		return;
-// 	}
-// 	if (node->type == CMD)
-// 	{
-// 		if (fork() == 0)
-// 		{
-// 			handle_redirections(node);
-// 			if (!noredirs_orheredoc_singlestdin(node))
-// 				exec(node);
-// 			else
-// 				exit(EXIT_FAILURE);
-// 		}
-// 		else
-// 		{
-// 			ft_close_all_fds();
-// 			wait(NULL);
-// 		}
-// 	}
-// }
-
-
-void	execute_ast(t_ast_node *node)
+int	check(t_ast_node *node)
 {
+	if (node->redirs && node->redirs->target)
+		return (1);
+	return (0);
+}
+
+void	execute_ast(t_ast_node *node, t_mini *mini)
+{
+	int pipe_fd[2];
+	int	left_has_redirection;
+	int	right_has_redirection;
+
 	if (!node)
 		return ;
 	if (node->type == PIPE)
 	{
-		int	pipe_fd[2];
+		left_has_redirection = check(node->left);
+		right_has_redirection = check(node->right);
+		if (left_has_redirection || right_has_redirection)
+        {
+            // Execute the left side normally (with redirections handled)
+            execute_ast(node->left, mini);
+            // Then execute the right side normally (with redirections handled)
+            execute_ast(node->right, mini);
+            return;
+        }
 		if (pipe(pipe_fd) == -1)
 		{
 			perror("Error creating pipe");
-		//	ft_close_all_fds();
 			return;
 		}
-
+		//ft_close_all_fds(mini);
 		if (fork() == 0)
 		{
+			/* handle_redirections(node->left); */
 			dup2(pipe_fd[1], STDOUT_FILENO);
 			close(pipe_fd[0]);
 			close(pipe_fd[1]);
-			execute_ast(node->left);
+			execute_ast(node->left, mini);
 		//	ft_close_all_fds();
 			exit(EXIT_FAILURE);
 		}
@@ -212,10 +170,11 @@ void	execute_ast(t_ast_node *node)
 		{
 			if (fork() == 0)
 			{
+				/* handle_redirections(node->right); */
 				dup2(pipe_fd[0], STDIN_FILENO);
 				close(pipe_fd[1]);
 				close(pipe_fd[0]);
-				execute_ast(node->right);
+				execute_ast(node->right, mini);
 			//	ft_close_all_fds();
 				exit(EXIT_FAILURE);
 			}
@@ -224,7 +183,7 @@ void	execute_ast(t_ast_node *node)
 			wait(NULL);
 			wait(NULL);
 		}
-	//	ft_close_all_fds();
+		ft_close_all_fds(mini);
 		return;
 	}
 	if (node->type == CMD)
@@ -232,10 +191,8 @@ void	execute_ast(t_ast_node *node)
 		if (fork() == 0)
 		{
 			handle_redirections(node);
-			if (!noredirs_orheredoc_singlestdin(node))
-				exec(node);
-			else
-				exit(EXIT_FAILURE);
+			exec(node, mini);
+			exit(EXIT_FAILURE);
 		}
 		else
 		{

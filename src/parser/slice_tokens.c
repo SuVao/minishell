@@ -1,5 +1,5 @@
 
-#include "../inc/minishell.h"
+#include "../../inc/minishell.h"
 
 static int	fill_sliced(char **sliced, int *count, char **tokens, int *i)
 {
@@ -62,5 +62,5 @@ char	**slice_tokens(char **tokens, int i, int end)
 		}
 	}
 	sliced[count] = NULL;
-	return sliced;
+	return (sliced);
 }

@@ -1,5 +1,5 @@
 
-#include "../inc/minishell.h"
+#include "../../inc/minishell.h"
 
 bool check_for_unclosed_quotes(char *input)
 {

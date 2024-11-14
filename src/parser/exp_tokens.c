@@ -1,6 +1,5 @@
 
-#include "../inc/minishell.h"
-
+#include "../../inc/minishell.h"
 
 static char	*replace(char *var_name, char **env_copy)
 {
@@ -35,7 +34,7 @@ static void	token_expand(expand_data *d, char *str, char **env_copy)
 		d->i++;
 		d->var_start = ft_strndup(&str[d->start], d->i - d->start + 1);
 		d->temp = replace(d->var_start, env_copy);
-		d->exp = ft_realloc(d->exp, ft_strlen(d->exp) + ft_strlen(d->temp) + 1, ft_strlen(d->exp)+1);
+		d->exp = (char*)ft_realloc(d->exp, ft_strlen(d->exp) + ft_strlen(d->temp) + 1, ft_strlen(d->exp)+1);
 		strcat(d->exp, d->temp);
 		free(d->temp);
 	}
@@ -78,8 +77,24 @@ char	**expand_vars(char **new_tokens, char **env_copy)
 	int		len;
 
 	i = 0;
+	if (new_tokens[i] && new_tokens[i][0] == '|')
+	{
+		perror("pipe error");
+		return (NULL);
+	}
 	while (new_tokens[i])
+	{
+		if (new_tokens[i][0] == '|')
+		{
+			// Check if next token exists and is valid
+			if (new_tokens[i+1] == NULL || new_tokens[i+1][0] == '|')
+			{
+				perror("pipe error");
+				return (NULL);
+			}
+		}
 		i++;
+	}
 	exp_tokens = malloc((i + 1) * sizeof(char *));
 	if (!exp_tokens)
 		return (NULL);

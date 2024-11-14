@@ -1,5 +1,6 @@
 
-#include "minishell.h"
+#include "../../inc/minishell.h"
+
 
 extern char **environ;
 
@@ -7,6 +8,8 @@ void	ft_free(char *list[])
 {
 	int	i;
 
+	if (!*list)
+		return;
 	i = 0;
 	while (list[i] != NULL)
 	{
@@ -23,7 +26,7 @@ char	*get_env()
 	while (environ[i])
 	{
 		// Find the PATH environment variable
-		if (strncmp(environ[i], "PATH=", 5) == 0)
+		if (ft_strncmp(environ[i], "PATH=", 5) == 0)
 			return (environ[i] + 5);  // Return everything after "PATH="
 		i++;
 	}
@@ -38,23 +41,19 @@ char	*get_path(char *cmd)
 	char	*path_part;
 	char	*env_path;
 
-	// Fetch the PATH environment variable
+	if (!cmd)
+        return NULL;
 	env_path = get_env();
 	if (!env_path)
 		return (cmd);
-
-	// Split the PATH by ':' to get each directory
 	allpath = ft_split(env_path, ':');
 	if (!allpath)
 		return (cmd);
-
-	// Loop through each path in PATH to find the executable
 	while (allpath[i])
 	{
 		path_part = ft_strjoin(allpath[i], "/");
 		exec = ft_strjoin(path_part, cmd);
 		free(path_part);
-
 		if (access(exec, F_OK | X_OK) == 0)  // Check if the executable exists and is executable
 		{
 			ft_free(allpath);

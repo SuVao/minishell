@@ -1,5 +1,6 @@
 
-#include "../inc/minishell.h"
+#include "../../inc/minishell.h"
+
 
 int	here_doc(char *str)
 {
@@ -12,7 +13,6 @@ int	here_doc(char *str)
 		perror("error failed to open");
 	while (1)
 	{
-		/* write(STDOUT_FILENO, "> ", 2); */
 		bytes_read = read(STDIN_FILENO, buffer, BUFFER_SIZE - 1);
 		if (bytes_read < 0)
 			perror("error read");
@@ -26,11 +26,7 @@ int	here_doc(char *str)
 	}
 	close(fd);
 	fd = open("temp.txt", O_RDONLY);
-	if (fd == -1)
-    {
-        perror("Failed to reopen temporary file");
-        return (-1);
-    }
+	dup2(fd, STDIN_FILENO);
 	unlink("temp.txt");
 	return (fd);
 }

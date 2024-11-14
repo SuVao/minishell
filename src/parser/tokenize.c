@@ -1,4 +1,5 @@
-#include "../inc/minishell.h"
+#include "../../inc/minishell.h"
+
 
 static void	add_token(char **t, char *token, int *ti)
 {

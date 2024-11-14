@@ -1,5 +1,5 @@
 
-#include "../inc/minishell.h"
+#include "../../inc/minishell.h"
 
 t_ast_node	*new_ast_node(int type, char *command, char **args)
 {
@@ -52,13 +52,13 @@ void	add_redirection(t_ast_node *node, int type, char *target)
 
 int	get_redir_type(char *token)
 {
-	if (!strcmp(token, ">"))
+	if (!ft_strcmp(token, ">"))
 		return (REDIR_OUT);
-	else if (!strcmp(token, ">>"))
+	else if (!ft_strcmp(token, ">>"))
 		return (REDIR_APPEND);
-	else if (!strcmp(token, "<"))
+	else if (!ft_strcmp(token, "<"))
 		return (REDIR_IN);
-	else if (!strcmp(token, "<<"))
+	else if (!ft_strcmp(token, "<<"))
 		return (HEREDOC);
 	return (-1);
 }
@@ -78,55 +78,70 @@ int	get_redir_type(char *token)
 
 char **filter(char **tokens)
 {
-	int	i;
-	int	num;
-	int	count;
-	char **final_args;
+    int i = 0;
+    int count = 0;
+    int num;
 
-	i = 0;
-	count = 0;
-	while (tokens[i])
-	{
-		num = get_redir_type(tokens[i]);
-		if (num != -1)
-			i +=2;
-		else
-		{
-			count++;
-			i++;
-		}
-	}
-	final_args = malloc((count + 1) * sizeof(char *));
-	if (!final_args)
-	{
-		perror("malloc");
-		return (NULL);
-	}
-	i = 0;
-	count = 0;
-	while (tokens[i])
-	{
-		num = get_redir_type(tokens[i]);
-		if (num != -1)
-			i +=2;
-		else
-		{
-			final_args[count] = tokens[i];
-			count++;
-			i++;
-		}
-	}
-	final_args[count] = NULL;
-	return (final_args);
+    // Iterate through tokens and process each one
+    while (tokens[i])
+    {
+        num = get_redir_type(tokens[i]);
+        if (num != -1)  // If it's a redirection token
+        {
+            // Free the redirection operator and its target
+            free(tokens[i]);
+            free(tokens[i + 1]);
+            i += 2;  // Skip both the redirection operator and its target
+        }
+        else
+        {
+            tokens[count] = tokens[i];  // Move the non-redirection token forward
+            count++;
+            i++;
+        }
+    }
+
+    tokens[count] = NULL;  // Mark the end of the trimmed tokens array
+    return tokens;
 }
 
-t_ast_node	*parse_tokens(char **tokens)
+t_token_node *add_token_to_list(t_token_node *head, char **tokens) {
+    // Allocate memory for the new node
+    t_token_node *new_node = malloc(sizeof(t_token_node));
+    if (!new_node) {
+        perror("Memory allocation error");
+        exit(1);
+    }
+    new_node->tokens = tokens;   // Store the slice
+    new_node->next = NULL;        // The new node is the last one in the list
+
+    // If the list is empty, the new node is the head
+    if (head == NULL) {
+        return new_node;
+    }
+
+    // Otherwise, traverse the list to find the last node
+    t_token_node *current = head;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+
+    // Now, current is the last node, so append the new node
+    current->next = new_node;
+
+    return head;  // Return the head of the list (unchanged)
+}
+
+
+t_ast_node	*parse_tokens(char **tokens, t_token_node **sliced_tokens_list)
 {
 	int			pipe_index;
 	t_ast_node	*node;
 	int			cmd_index;
 	int			i;
 	int			redir_type;
+	char		**left_slice;
+	char		**right_slice;
 
 	i = 0;
 	node = NULL;
@@ -135,8 +150,14 @@ t_ast_node	*parse_tokens(char **tokens)
 	if (pipe_index != -1)
 	{
 		node = new_ast_node(PIPE, NULL, NULL);
-		node->left = parse_tokens(slice_tokens(tokens, 0, pipe_index));
-		node->right = parse_tokens(slice_tokens(tokens, pipe_index + 1, -1));
+		left_slice = slice_tokens(tokens, 0, pipe_index);
+		right_slice = slice_tokens(tokens, pipe_index + 1, -1);
+
+		*sliced_tokens_list = add_token_to_list(*sliced_tokens_list, left_slice);
+		*sliced_tokens_list = add_token_to_list(*sliced_tokens_list, right_slice);
+
+		node->left = parse_tokens(left_slice, sliced_tokens_list);
+		node->right = parse_tokens(right_slice, sliced_tokens_list);
 		return (node);
 	}
 
@@ -159,7 +180,7 @@ t_ast_node	*parse_tokens(char **tokens)
 	while (tokens[i] != NULL)
 	{
     	redir_type = get_redir_type(tokens[i]);
-    	if (redir_type != -1)
+    	if (redir_type != -1 && redir_type != HEREDOC)
 		{
         	if (tokens[i + 1] == NULL)
             	perror("Syntax error: missing file for redirection");
