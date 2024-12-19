@@ -34,7 +34,7 @@ char	*ft_strchr(const char *str, int c)
 	return (0);
 }
 
-// int		main()
+// int		main(void)
 // {
 // 	char	str1[] = {"ola caralho"};
 // 	char	*string;

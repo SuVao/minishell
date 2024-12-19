@@ -36,7 +36,7 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 	return (str);
 }
 
-// int		main()
+// int		main(void)
 // {
 // 	char	str[] = "lorem ipsum dolor sit amet";
 // 	char	*strsub;

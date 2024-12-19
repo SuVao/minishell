@@ -32,11 +32,11 @@ int	ft_strcmp(const char *str1, const char *str2)
 	return (s1[i] - s2[i]);
 }
 
-/*int		main()
+/*int		main(void)
 {
 	char	s1[] = { "ola caralho!"};
 	char	s2[] = { "ola caralh2!"};
 
 	printf("strcmp: %d", ft_strcmp(s1, s2));
-	return 0;
+	return (0);
 }*/

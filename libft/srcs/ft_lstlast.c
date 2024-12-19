@@ -24,7 +24,7 @@ t_list	*ft_lstlast(t_list *lst)
 	return (last);
 }
 
-/*int	main()
+/*int	main(void)
 {
 	t_list *lst;
 	t_list *lst2;

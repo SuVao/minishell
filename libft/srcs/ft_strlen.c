@@ -21,9 +21,9 @@ size_t	ft_strlen(const char *str)
 	return (i);
 }
 
-/*int	main()
+/*int	main(void)
 {
 	char	str[] = {"123456"};
 	printf("i = %d", ft_strlen(str));
-	return 0;
+	return (0);
 }*/

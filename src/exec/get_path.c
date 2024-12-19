@@ -1,15 +1,23 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_path.c                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mcarepa- <mcarepa-@student.42lisboa.com    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/20 16:01:00 by mcarepa-          #+#    #+#             */
+/*   Updated: 2024/11/20 16:01:08 by mcarepa-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../../inc/minishell.h"
-
-
-extern char **environ;
 
 void	ft_free(char *list[])
 {
 	int	i;
 
 	if (!*list)
-		return;
+		return ;
 	i = 0;
 	while (list[i] != NULL)
 	{
@@ -19,49 +27,45 @@ void	ft_free(char *list[])
 	free(list);
 }
 
-char	*get_env()
+char	*get_env(char **env)
 {
-	int	i = 0;
+	int	i;
 
-	while (environ[i])
+	i = 0;
+	while (env[i])
 	{
-		// Find the PATH environment variable
-		if (ft_strncmp(environ[i], "PATH=", 5) == 0)
-			return (environ[i] + 5);  // Return everything after "PATH="
+		if (ft_strncmp(env[i], "PATH=", 5) == 0)
+			return (env[i] + 5);
 		i++;
 	}
 	return (NULL);
 }
 
-char	*get_path(char *cmd)
+char	*get_path(char *cmd, char **env)
 {
-	int		i = 0;
-	char	*exec;
-	char	**allpath;
-	char	*path_part;
-	char	*env_path;
+	t_getpath	path;
 
-	if (!cmd)
-        return NULL;
-	env_path = get_env();
-	if (!env_path)
-		return (cmd);
-	allpath = ft_split(env_path, ':');
-	if (!allpath)
-		return (cmd);
-	while (allpath[i])
+	if (!cmd || !*cmd)
+		return (NULL);
+	path.env_path = get_env(env);
+	if (!path.env_path)
+		return (NULL);
+	path.allpath = ft_split(path.env_path, ':');
+	if (!path.allpath)
+		return (NULL);
+	path.i = 0;
+	while (path.allpath[path.i])
 	{
-		path_part = ft_strjoin(allpath[i], "/");
-		exec = ft_strjoin(path_part, cmd);
-		free(path_part);
-		if (access(exec, F_OK | X_OK) == 0)  // Check if the executable exists and is executable
+		path.path_part = ft_strjoin(path.allpath[path.i++], "/");
+		path.exec = ft_strjoin(path.path_part, cmd);
+		free(path.path_part);
+		if (access(path.exec, F_OK | X_OK) == 0)
 		{
-			ft_free(allpath);
-			return (exec);  // Found the executable
+			ft_free(path.allpath);
+			return (path.exec);
 		}
-		free(exec);
-		i++;
+		free(path.exec);
 	}
-	ft_free(allpath);
-	return (cmd);  // Return cmd if not found in PATH
+	ft_free(path.allpath);
+	return (NULL);
 }

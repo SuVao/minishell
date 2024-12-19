@@ -6,9 +6,10 @@
 /*   By: pesilva- <pesilva-@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/12 22:52:15 by pesilva-          #+#    #+#             */
-/*   Updated: 2024/04/12 22:52:15 by pesilva-         ###   ########.fr       */
+/*   Updated: 2024/12/02 19:27:20 by pesilva-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "../libft.h"
 
 char	*ft_strdup(const char *s)
@@ -37,5 +38,5 @@ char	*ft_strdup(const char *s)
 //     char	*target = ft_strdup(source, 14);
 //     printf("%s", target);
 // 	free(target);
-//     return 0;
+//     return (0);
 // }

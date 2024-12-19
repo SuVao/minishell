@@ -48,5 +48,5 @@ char	*ft_strnstr(const char *src, const char *to_find, size_t tam)
 //         printf("Substring não encontrada.\n");
 //     }
 
-//     return 0;
+//     return (0);
 // }

@@ -1,151 +1,74 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   env.c                                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pesilva- <pesilva-@student.42lisboa.com    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/02 19:30:23 by pesilva-          #+#    #+#             */
+/*   Updated: 2024/12/04 19:00:37 by pesilva-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../../inc/minishell.h"
 
-void ft_env(t_mini *mini)
+char	*ft_encontra_o_home(void)
 {
-	int i = 0;
-	while (mini->env[i])
-		printf("%s\n", mini->env[i++]);
-}
-
-void replace_var_env(char **envp, char *to_found, char *to_replace)
-{
-	int i;
+	int		i;
+	int		k;
+	char	*home;
+	char	*new_home;
 
 	i = 0;
-	while (envp[i] != NULL)
-	{
-		if (ft_strncmp(envp[i], to_found, ft_strlen(to_found)) == 0)
-		{
-			free(envp[i]);
-			envp[i] = ft_strjoin(to_found, to_replace);
-			break;
-		}
-		i++;
-	}
-}
-
-void update_env(char *new_pwd, char *pwd,t_mini *mini)
-{
-	int i;
-
-	i = 0;
-	if (!pwd)
-	{
-		free(pwd);
-		pwd = getcwd(NULL, 0);
-	}
-	if (!new_pwd)
-		new_pwd = getcwd(NULL, 0);
-	while (mini->env[i] != NULL)
-	{
-		replace_var_env(mini->env, "OLDPWD=", pwd);
-		replace_var_env(mini->env, "PWD=", new_pwd);
-		i++;
-		break;
-	}
-}
-
-void update_env_abs(char *pwd, char *home, t_mini *mini)
-{
-	int i;
-
-	i = 0;
-	while (mini->env[i] != NULL)
-	{
-		replace_var_env(mini->env, "OLDPWD=", pwd);
-		replace_var_env(mini->env, "PWD=", home);
-		i++;
-		break;
-	}
-}
-
-char *encontra_barra(char *s)
-{
-	char *new_pwd;
-	int j;
-	int i;
-
-	new_pwd = NULL;
-	i = 0;
-	while (s[i])
-		i++;
-	while (i > 0)
-	{
-		if (s[i] == '/')
-			break ;
-		i--;
-	}
-	new_pwd = malloc(sizeof(char) * (i + 1));
-	if (!new_pwd)
+	home = NULL;
+	new_home = getcwd(NULL, 0);
+	if (!new_home)
 		return (NULL);
-	j = 0;
-	while (j != i)
+	k = 0;
+	while (new_home[i])
 	{
-		new_pwd[j] = s[j];
-		j++;
-	}
-	new_pwd[j] = '\0';
-	return (new_pwd);
-}
-
-void update_env_back_cd(char *new_pwd, char*pwd, t_mini *mini)
-{
-	int i;
-
-	i = 0;
-	while (mini->env[i] != NULL)
-	{
-		replace_var_env(mini->env, "OLDPWD=", pwd);
-		replace_var_env(mini->env, "PWD=", new_pwd);
-		i++;
-		break;
-	}
-}
-
-char *get_var_env(char **env, char *to_find)
-{
-	int i = 0;
-	while (env[i])
-	{
-		if (ft_strncmp(env[i], to_find, ft_strlen(to_find)) == 0)
-			return (ft_strdup(ft_strchr(env[i], '/') ));
+		if (new_home[i] == '/')
+			k++;
+		if (new_home[i + 1] == '/' && k == 1)
+			break ;
 		i++;
 	}
-	return NULL;
+	k = 0;
+	while (new_home[k] != '/')
+		k++;
+	home = ft_substr(new_home, k, i + 1);
+	return (home);
 }
 
-void init_envp(t_mini *mini, char **envp)
+static void	ft_fill_env(t_mini *mini, char *home, char *pwd)
 {
-	int i;
-
-	i = 0;
-	while (envp[i])
-		i++;
-	mini->env = (char **)malloc(sizeof(char *) * (i + 1));
-	i = 0;
-	while (envp[i])
+	mini->env[0] = ft_strjoin("HOME=", home);
+	mini->env[1] = ft_strjoin("PWD=", pwd);
+	mini->env[2] = ft_strjoin("SHLVL=", ft_itoa(mini->shlvl));
+	mini->env[3] = ft_strjoin("OLDPWD=", pwd);
+	mini->env[4] = NULL;
+	if (!mini->env[0] || !mini->env[1] || !mini->env[2] || !mini->env[3])
 	{
-		mini->env[i] = ft_strdup(envp[i]);
-		i++;
+		free_args(mini->env);
+		exit(EXIT_FAILURE);
 	}
-	mini->env[i] = NULL;
 }
 
-void init_myown_envp(t_mini *mini)
+void	init_myown_envp(t_mini *mini)
 {
-	char *pwd;
+	char	*pwd;
+	char	*home;
 
-	mini->env = (char **)malloc(sizeof(char *) * 3);
+	mini->env = (char **)malloc(sizeof(char *) * 5);
 	mini->shlvl = 1;
 	pwd = getcwd(NULL, 0);
 	if (pwd == NULL)
 	{
+		free(pwd);
 		printf("Error: getcwd failed\n");
 		return ;
 	}
-	mini->env[0] = ft_strjoin("PWD=", pwd);
-	mini->env[1] = ft_strjoin("SHLVL=", ft_itoa(mini->shlvl));
-	mini->env[2] = NULL;
+	home = ft_encontra_o_home();
+	ft_fill_env(mini, home, pwd);
 	free(pwd);
 }

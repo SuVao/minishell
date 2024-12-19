@@ -1,28 +1,39 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_realloc.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pesilva- <pesilva-@student.42lisboa.com    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/02 19:25:00 by pesilva-          #+#    #+#             */
+/*   Updated: 2024/12/02 19:25:01 by pesilva-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../libft.h"
 
-static size_t	size_copy( size_t size, size_t old_size)
+static size_t	size_copy(size_t size, size_t old_size)
 {
-
-    if (old_size < size)
-   		return (old_size);
-    else
-    	return (size);
+	if (old_size < size)
+		return (old_size);
+	else
+		return (size);
 }
 
-void *ft_realloc(void *ptr, size_t size, size_t old_size)
+void	*ft_realloc(void *ptr, size_t size, size_t old_size)
 {
-  	void	*new_ptr;
-    size_t	copy_size;
+	void	*new_ptr;
+	size_t	copy_size;
 
 	if (size == 0)
 	{
 		free(ptr);
-		return(NULL);
+		return (NULL);
 	}
 	if (!ptr)
 		return (malloc(size));
 	new_ptr = malloc(size);
-	if(!new_ptr)
+	if (!new_ptr)
 		return (NULL);
 	copy_size = size_copy(size, old_size);
 	ft_memcpy(new_ptr, ptr, copy_size);

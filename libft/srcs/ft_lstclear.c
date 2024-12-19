@@ -32,5 +32,5 @@ void	ft_lstclear(t_list **lst, void (*del)(void *))
 // 	void (*del)(void *);
 // 	del = &free;
 // 	ft_lstclear(&lst, del);
-// 	return 0;
+// 	return (0);
 // }

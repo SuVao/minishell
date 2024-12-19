@@ -13,8 +13,8 @@
 
 size_t	ft_strlcat(char *dest, const char *src, size_t size)
 {
-	size_t		a;
-	size_t		b;
+	size_t	a;
+	size_t	b;
 
 	a = 0;
 	b = 0;
@@ -30,7 +30,7 @@ size_t	ft_strlcat(char *dest, const char *src, size_t size)
 	return (b + ft_strlen(src));
 }
 
-// int		main()
+// int		main(void)
 // {
 // 	char			dest[15] = { "a"};
 // 	const char		src[] = { "lorem"};

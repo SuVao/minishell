@@ -1,18 +1,29 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   quotes.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mcarepa- <mcarepa-@student.42lisboa.com    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/20 20:18:19 by mcarepa-          #+#    #+#             */
+/*   Updated: 2024/11/20 20:18:23 by mcarepa-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../../inc/minishell.h"
 
-bool check_for_unclosed_quotes(char *input)
+bool	check_for_unclosed_quotes(char *input)
 {
-	int i;
-	int single_quote_open;
-	int double_quote_open;
+	int	i;
+	int	single_quote_open;
+	int	double_quote_open;
 
 	i = 0;
 	single_quote_open = 0;
 	double_quote_open = 0;
 	while (input[i])
 	{
-		if (input[i] == '\'' && !double_quote_open) // var = 0; !var = 1;
+		if (input[i] == '\'' && !double_quote_open)
 			single_quote_open = !single_quote_open;
 		else if (input[i] == '"' && !single_quote_open)
 			double_quote_open = !double_quote_open;
@@ -23,7 +34,7 @@ bool check_for_unclosed_quotes(char *input)
 	return (true);
 }
 
-int semicolon_checker(char *str)
+int	semicolon_checker(char *str)
 {
 	int	i;
 	int	s_quote;
@@ -47,7 +58,7 @@ int semicolon_checker(char *str)
 	return (true);
 }
 
-bool checker_quotes(char *input)
+bool	checker_quotes(char *input)
 {
 	if (!check_for_unclosed_quotes(input))
 	{

@@ -1,203 +1,134 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute_ast.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mcarepa- <mcarepa-@student.42lisboa.com    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/20 16:01:41 by mcarepa-          #+#    #+#             */
+/*   Updated: 2024/12/11 13:26:05 by mcarepa-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../../inc/minishell.h"
 
-
-extern char **environ;
-
-void	exec(t_ast_node *node, t_mini *mini)
+void	exec(t_node *cur, t_mini *mini)
 {
 	char	*path;
 
-	/* if (ft_strncmp(node->cmd, "cd", 2) == 0 && !node->cmd[2])
-		ft_cd(node, mini); */
-	path = get_path(node->cmd); // fazer o get path com environment global variable
-	if (!path)
+	mini->is_busy = 1;
+	ft_check_cmd(cur, mini);
+	if (!is_echo(cur, mini))
 	{
-		/* perror("Command not found"); */
-		exit(EXIT_FAILURE);
+		path = get_path(cur->cmd, mini->env);
+		if (!path)
+		{
+			main_pid()->status = 127;
+			printf("%s: Command not found\n", cur->cmd);
+			free_mini_things(cur, mini);
+			exit(main_pid()->status);
+		}
+		execve(path, cur->args, mini->env);
+		perror("execve error");
+		free(path);
+		exit(1);
 	}
-	execve(path, node->args, environ);
-	perror("execve error");
-	// free(path);
-	// exit(EXIT_FAILURE);
+	free_mini_things(cur, mini);
+}
+
+void	handle_child(t_node *cur, t_mini *mini, int *i, int *infd)
+{
+	if (*i != 0)
+	{
+		dup2(*infd, STDIN_FILENO);
+		close(*infd);
+	}
+	if (*i != mini->nr_pipes)
+		dup2(mini->pipe_fd[1], STDOUT_FILENO);
+	close(mini->pipe_fd[0]);
+	close(mini->pipe_fd[1]);
+	if (cur->infile != 0)
+	{
+		dup2(cur->infile, STDIN_FILENO);
+		close(cur->infile);
+	}
+	if (cur->outfile != 1)
+	{
+		dup2(cur->outfile, STDOUT_FILENO);
+		close(cur->outfile);
+	}
 	ft_close_all_fds(mini);
+	exec(cur, mini);
+	exit(EXIT_FAILURE);
 }
 
-void	handle_redirections(t_ast_node *node)
+void	do_pipe(t_node *cur, t_mini *mini, int *i, int *infd)
 {
-	t_redirection *redir;
-	int fd;
+	pid_t	pid;
 
-	redir = node->redirs;
-	while (redir)
+	main_pid()->exec = 1;
+	pid = fork();
+	if (pid == -1)
+		exit(EXIT_FAILURE);
+	if (pid == 0)
 	{
-		/* printf("tokens: %s\n", redir->target); */
-		if (redir->type == REDIR_IN)
-		{
-			fd = open(redir->target, O_RDONLY);
-			if (fd == -1)
-			{
-				perror("failed to open input file");
-				close(fd);
-				exit(EXIT_FAILURE);
-			}
-			dup2(fd, STDIN_FILENO);
-			close(fd);
-		}
-		else if (redir->type == REDIR_OUT)
-		{
-			fd = open(redir->target, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-			if (fd == -1)
-			{
-				perror("failed to open output file");
-				close(fd);
-				exit(EXIT_FAILURE);
-			}
-			dup2(fd, STDOUT_FILENO);
-			close(fd);
-		}
-		else if (redir->type == REDIR_APPEND)
-		{
-			fd = open(redir->target, O_WRONLY | O_CREAT | O_APPEND, 0644);
-			if (fd == -1)
-			{
-				perror("failed to open output file for append");
-				close(fd);
-				exit(EXIT_FAILURE);
-			}
-			dup2(fd, STDOUT_FILENO);
-			close(fd);
-		}
-		else if (redir->type == HEREDOC)
-		{
-			fd = here_doc(redir->target);
-			dup2(fd, STDIN_FILENO);
-			close(fd);
-		}
-		redir = redir->next;
+		handling_sig_children();
+		handle_child(cur, mini, i, infd);
+	}
+	else
+	{
+		mini->pids[*i] = pid;
+		if (*infd != STDIN_FILENO)
+			close(*infd);
+		*infd = mini->pipe_fd[0];
+		if (cur->infile != 0)
+			close(cur->infile);
+		if (cur->outfile != 1)
+			close(cur->outfile);
+		close(mini->pipe_fd[1]);
 	}
 }
 
-int	noredirs_orheredoc_singlestdin(t_ast_node *node)
+static void	ft_loop_wait(int i, int status, t_mini *mini)
 {
-	t_redirection *temp;
-	int	count_redirs;
-	int	count_inredir;
+	int	j;
 
-	temp = node->redirs;
-	count_redirs = 0;
-	count_inredir = 0;
-	if (!temp)
-		return (0);
-	while (temp)
+	j = 0;
+	while (j <= i)
 	{
-		if (temp->type == HEREDOC)
-			return (0);
-		else if (temp->type == REDIR_IN)
-			count_inredir++;
-		else
-			count_redirs++;
-		temp = temp->next;
-	}
-	if (count_inredir && !count_redirs)
-		return (0);
-	return (1);
-}
-
-void	ft_close(int fd)
-{
-	if (fd > 2)
-		close(fd);
-}
-
-void	ft_close_all_fds(t_mini *mini)
-{
-	int	fd;
-
-	(void)mini;
-	fd = 3;
-	while (fd < 1024)
-	{
-		close(fd);
-		fd++;
+		if (mini->pids[j] != -1)
+		{
+			waitpid(mini->pids[j], &main_pid()->status, 0);
+			if (WIFEXITED(main_pid()->status))
+				status = WEXITSTATUS(main_pid()->status);
+			else if (WIFSIGNALED(main_pid()->status))
+				status = 128 + WTERMSIG(main_pid()->status);
+		}
+		j++;
 	}
 }
 
-int	check(t_ast_node *node)
+void	execute(t_node *sliced_tokens_list, t_mini *mini)
 {
-	if (node->redirs && node->redirs->target)
-		return (1);
-	return (0);
-}
+	int		status;
+	t_node	*cur;
+	int		i;
+	int		infd;
 
-void	execute_ast(t_ast_node *node, t_mini *mini)
-{
-	int pipe_fd[2];
-	int	left_has_redirection;
-	int	right_has_redirection;
-
-	if (!node)
+	infd = STDIN_FILENO;
+	i = 0;
+	cur = sliced_tokens_list;
+	status = 0;
+	if (is_builtins(cur, mini, &status))
 		return ;
-	if (node->type == PIPE)
+	while (cur)
 	{
-		left_has_redirection = check(node->left);
-		right_has_redirection = check(node->right);
-		if (left_has_redirection || right_has_redirection)
-        {
-            // Execute the left side normally (with redirections handled)
-            execute_ast(node->left, mini);
-            // Then execute the right side normally (with redirections handled)
-            execute_ast(node->right, mini);
-            return;
-        }
-		if (pipe(pipe_fd) == -1)
-		{
-			perror("Error creating pipe");
-			return;
-		}
-		//ft_close_all_fds(mini);
-		if (fork() == 0)
-		{
-			/* handle_redirections(node->left); */
-			dup2(pipe_fd[1], STDOUT_FILENO);
-			close(pipe_fd[0]);
-			close(pipe_fd[1]);
-			execute_ast(node->left, mini);
-		//	ft_close_all_fds();
-			exit(EXIT_FAILURE);
-		}
-		else
-		{
-			if (fork() == 0)
-			{
-				/* handle_redirections(node->right); */
-				dup2(pipe_fd[0], STDIN_FILENO);
-				close(pipe_fd[1]);
-				close(pipe_fd[0]);
-				execute_ast(node->right, mini);
-			//	ft_close_all_fds();
-				exit(EXIT_FAILURE);
-			}
-			close(pipe_fd[0]);
-			close(pipe_fd[1]);
-			wait(NULL);
-			wait(NULL);
-		}
-		ft_close_all_fds(mini);
-		return;
+		if (pipe(mini->pipe_fd) == -1)
+			perror("error pipe");
+		do_pipe(cur, mini, &i, &infd);
+		cur = cur->next;
+		i++;
 	}
-	if (node->type == CMD)
-	{
-		if (fork() == 0)
-		{
-			handle_redirections(node);
-			exec(node, mini);
-			exit(EXIT_FAILURE);
-		}
-		else
-		{
-		//	ft_close_all_fds();
-			wait(NULL);
-		}
-	}
+	ft_close_all_fds(mini);
+	ft_loop_wait(i, status, mini);
 }

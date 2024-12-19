@@ -13,7 +13,7 @@
 
 static int	count_dig(long n)
 {
-	int		count;
+	int	count;
 
 	count = 0;
 	if (n < 0)
@@ -70,7 +70,7 @@ char	*ft_itoa(int n)
 	return (str);
 }
 
-// int		main()
+// int		main(void)
 // {
 // 	char	*str;
 

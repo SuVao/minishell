@@ -20,5 +20,5 @@ int	ft_isascii(int c)
 {
 	int c = 65;
 	printf("isascii: %d", ft_isascii(c));
-	return 0;
+	return (0);
 }*/

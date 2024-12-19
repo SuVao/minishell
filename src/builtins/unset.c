@@ -1,31 +1,70 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   unset.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pesilva- <pesilva-@student.42lisboa.com    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/02 20:19:08 by pesilva-          #+#    #+#             */
+/*   Updated: 2024/12/02 20:26:22 by pesilva-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../inc/minishell.h"
 
-void ft_unset(t_mini *mini)
+int	check_var(char *str)
 {
-	int i;
-	int j;
-	char **new_env;
+	int	i;
 
 	i = 0;
-	j = 0;
-	while (mini->env[i])
-		i++;
-	new_env = (char **)malloc(sizeof(char *) * i);
-	i = 0;
-	while (mini->env[i])
+	if (!str)
+		return (0);
+	if (!ft_isalpha(str[0]))
+		return (0);
+	while (str[i])
 	{
-		if (ft_strncmp(mini->env[i], mini->args[1], ft_strlen(mini->args[1])) != 0)
-		{
-			new_env[j] = mini->env[i];
-			j++;
-		}
-		else
-		{
-			free(mini->env[i]);
-		}
+		if (!ft_isalnum(str[i]) && str[i] != '=' && str[i] != '\''
+			&& str[i] != '\"' && str[i] != '_')
+			return (0);
+		str++;
+	}
+	return (1);
+}
+
+void	ft_unsetting(t_mini *mini, int i)
+{
+	free(mini->env[i]);
+	while (mini->env[i + 1])
+	{
+		mini->env[i] = mini->env[i + 1];
 		i++;
 	}
-	new_env[j] = NULL;
-	free(mini->env);
-	mini->env = new_env;
+	mini->env[i] = NULL;
+}
+
+void	ft_unset(t_mini *mini, t_node *node)
+{
+	int	i;
+	int	j;
+	int	k;
+
+	k = 0;
+	if (!node->args[1] || !*node->args)
+		return ;
+	while (node->args[k])
+	{
+		i = 0;
+		j = 0;
+		while (mini->env[i])
+		{
+			if (ft_strncmp(mini->env[i], node->args[k],
+					ft_strlen(node->args[1])) == 0)
+			{
+				ft_unsetting(mini, i);
+				break ;
+			}
+			i++;
+		}
+		k++;
+	}
 }

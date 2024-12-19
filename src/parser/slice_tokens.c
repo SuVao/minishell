@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   slice_tokens.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mcarepa- <mcarepa-@student.42lisboa.com    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/20 20:18:50 by mcarepa-          #+#    #+#             */
+/*   Updated: 2024/11/20 21:45:25 by mcarepa-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../../inc/minishell.h"
 
@@ -35,23 +46,27 @@ void	free_sliced(char **sliced, int count)
 	free(sliced);
 }
 
+int	get_end(char **tokens, int *end, int *count)
+{
+	while (tokens[*count] != NULL)
+		(*count)++;
+	*end = *count;
+	return (*end);
+}
+
 char	**slice_tokens(char **tokens, int i, int end)
 {
-	int	count;
-	int	n_free;
-	char **sliced;
+	int		count;
+	int		n_free;
+	char	**sliced;
 
 	count = i;
 	if (end == -1)
-	{
-		while (tokens[count] != NULL)
-			count++;
-		end = count;
-	}
+		end = get_end(tokens, &end, &count);
 	n_free = end - i + 1;
 	sliced = malloc((end - i + 1) * sizeof(char *));
 	if (!sliced)
-		return NULL;
+		return (NULL);
 	count = 0;
 	while (i < end)
 	{

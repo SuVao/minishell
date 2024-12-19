@@ -40,7 +40,7 @@ int	ft_atoi(const char *str)
 	return (res * sign);
 }
 
-// int		main()
+// int		main(void)
 // {
 // 	const char	s1[] = {"    +1234"};
 // 	int		res1;

@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 #include "../libft.h"
 
-void	ft_bzero(void *str, size_t	num)
+void	ft_bzero(void *str, size_t num)
 {
 	unsigned char	*char_str;
 	size_t			i;

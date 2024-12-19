@@ -52,11 +52,11 @@ char	**ft_split(const char *s, char c)
 	matrix = ft_calloc(sizeof(char *), (words + 1));
 	if (!matrix)
 		return (NULL);
-	str_split((char *) s, c, matrix);
+	str_split((char *)s, c, matrix);
 	return (matrix);
 }
 
-/* int	main()
+/* int	main(void)
 {
 	char		**matrix;
 	int			i;

@@ -43,7 +43,7 @@ char	*ft_strtrim(const char *s1, const char *set)
 	return (new_s);
 }
 
-// int		main()
+// int		main(void)
 // {
 // 	const char	s1[] = {"lorem \n ipsum \t dolor \n sit \t ametol"};
 // 	const char	set[] = {"lo"};

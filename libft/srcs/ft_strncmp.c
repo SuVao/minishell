@@ -25,8 +25,8 @@ int	ft_strncmp(const char *s1, const char *s2, size_t nb)
 	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }
 
-// int		main()
+// int		main(void)
 // {
 // 	printf("strncmp: %d", ft_strncmp("test\200", "test\0", 6));
-// 	return 0;
+// 	return (0);
 // }
