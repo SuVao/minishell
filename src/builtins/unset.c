@@ -21,7 +21,7 @@ int	check_var(char *str)
 		return (0);
 	if (!ft_isalpha(str[0]))
 		return (0);
-	while (str[i])
+	while (str[i] != '=' && str[i])
 	{
 		if (!ft_isalnum(str[i]) && str[i] != '=' && str[i] != '\''
 			&& str[i] != '\"' && str[i] != '_')
@@ -57,8 +57,7 @@ void	ft_unset(t_mini *mini, t_node *node)
 		j = 0;
 		while (mini->env[i])
 		{
-			if (ft_strncmp(mini->env[i], node->args[k],
-					ft_strlen(node->args[1])) == 0)
+			if (ft_strcmp(mini->env[i], node->args[k]) == 0)
 			{
 				ft_unsetting(mini, i);
 				break ;

@@ -58,10 +58,12 @@ char	**copy_tmp(int count_lines, int i, t_mini *mini)
 
 char	*ft_cpyline(char *tmp_env, char **tmp_env1, char *args, char **tmp)
 {
+
 	tmp_env = ft_strdup(args);
 	if (!tmp_env)
 	{
-		ft_free_env(tmp_env1);
+		if (tmp_env1)
+			ft_free_env(tmp_env1);
 		free_args(tmp);
 		return (NULL);
 	}
@@ -94,6 +96,22 @@ char	**ft_cenas_com_vars(t_node *node, char **tmp_env, int i, t_mini *mini)
 	return (tmp_env);
 }
 
+int	ft_count_args(char **args)
+{
+	int	i;
+	int	count;
+
+	count = 0;
+	i = 1;
+	while (args[i])
+	{
+		if (is_var(args[i]) && check_var(args[i]))
+			count++;
+		i++;
+	}
+	return (i);
+}
+
 char	**ft_split_vars(t_node *node)
 {
 	char	**tmp;
@@ -103,19 +121,22 @@ char	**ft_split_vars(t_node *node)
 	tmp = NULL;
 	k = 1;
 	i = 0;
+	tmp = malloc(sizeof(char *) * (ft_count_args(node->args) + 1));
 	while (node->args[k])
 	{
-		if (check_var(node->args[k]) && is_var(node->args[k]))
+		if (is_var(node->args[k]))
 		{
-			tmp[i] = ft_strdup(node->args[k]);
-			if (!tmp[i])
-				return (NULL);
-			i++;
+			if (check_var(node->args[k]))
+			{
+				tmp[i] = ft_strdup(node->args[k]);
+				printf("node->args[%d]: %s\n", i, node->args[k]);
+				if (!tmp[i])
+					return (NULL);
+				i++;
+			}
 		}
 		else
-		{
 			printf("export: `%s': not a valid identifier\n", node->args[k]);
-		}
 		k++;
 	}
 	tmp[i] = NULL;
@@ -152,10 +173,12 @@ void	ft_export(t_node *node, t_mini *mini)
 	char	*new_var;
 	char	*temp;
 	int		i;
+	int 	j;
 	int		count_lines;
 	char	**valid_vars;
 	count_lines = 0;
 	i = 0;
+	j = 0;
 	new_var = NULL;
 	temp = NULL;
 	tmp_env = NULL;
@@ -168,22 +191,32 @@ void	ft_export(t_node *node, t_mini *mini)
 	valid_vars = ft_split_vars(node);
 	if (valid_vars == NULL)
 		return ;
-	// while (valid_vars[i])
-	// {
-	// 	if (check_var(valid_vars[i]) == 0)
-	// 		return ;
-	// 	i++;
-	// }
-	printf("ola\n");
-	count_lines = checking_if_already_exits(node, mini);
-	i = 0;
-	while (mini->env[i] != NULL)
+	while (mini->env[j])
+		j++;
+	while (valid_vars[i])
+	{
+		if (already_exist(valid_vars[i], mini) == 0)
+		{
+			temp = ft_substr(ft_memchr(valid_vars[i], '=', ft_strlen(valid_vars[i])) + 1, 0,\
+			 ft_strlen(ft_memchr(valid_vars[i], '=', ft_strlen(valid_vars[i])) + 1));
+			tmp_env[j] = ft_cpyline(tmp_env[j], NULL, temp, valid_vars);
+			free(temp);
+		}
+		else
+			ft_replace_var(tmp_env, valid_vars[i], valid_vars[i]);
 		i++;
-	tmp_env = copy_tmp(count_lines, i, mini);
-	tmp_env = ft_cenas_com_vars(node, tmp_env, i, mini);
-	if (!tmp_env)
-		return ;
+	}
+	free_args(valid_vars);
 	tmp_env[++i] = NULL;
 	ft_free_env(mini->env);
 	mini->env = tmp_env;
+
+	//count_lines = checking_if_already_exits(node, mini);
+	//i = 0;
+	//while (mini->env[i] != NULL)
+	//	i++;
+	//tmp_env = copy_tmp(count_lines, i, mini);
+	//tmp_env = ft_cenas_com_vars(node, tmp_env, i, mini);
+	//if (!tmp_env)
+	//	return ;
 }
