@@ -59,7 +59,7 @@ int	already_exist(char *arg, t_mini *mini)
 		return (0);
 	while (mini->env[i] != NULL)
 	{
-		if (ft_strcmp(mini->env[i], tmp) == 0)
+		if (ft_strncmp(mini->env[i], tmp, ft_strlen(tmp)) == 0)
 		{
 			free(tmp);
 			return (1);
@@ -82,18 +82,16 @@ void	ft_zero_env(char **env)
 	}
 }
 
-// int	var_accept(t_node *node)
-// {
-// 	int	i;
-// 	int	j;
+int	var_accept(t_node *node)
+{
+	int	i;
 
-// 	j = 1;
-// 	i = 0;
-// 	while (node->args[j][i])
-// 	{
-// 		if (node->args[j][i] == '=')
-// 			return (1);
-// 		i++;
-// 	}
-// 	return (0);
-// }
+	i = 0;
+	while (node->args[1][i])
+	{
+		if (node->args[1][i] == '=')
+			return (1);
+		i++;
+	}
+	return (0);
+}

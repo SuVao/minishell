@@ -50,7 +50,8 @@ void	ft_free_env(char **env)
 		return ;
 	while (env[i])
 	{
-		free(env[i]);
+		if (env[i])
+			free(env[i]);
 		i++;
 	}
 	free(env);
@@ -76,13 +77,13 @@ int	is_builtins(t_node *node, t_mini *mini, int *status)
 		ft_cd(node, mini, status);
 	else if (ft_strncmp(node->cmd, "pwd", 4) == 0)
 		ft_pwd(mini);
-	else if (ft_strcmp(node->cmd, "export") == 0)
+	else if (ft_strncmp(node->cmd, "export", 7) == 0 && node->args[1] != NULL)
 		ft_export(node, mini);
-	else if (ft_strcmp(node->cmd, "unset") == 0)
+	else if (ft_strncmp(node->cmd, "unset", 6) == 0)
 		ft_unset(mini, node);
-	else if (ft_strcmp(node->cmd, "env") == 0)
+	else if (ft_strncmp(node->cmd, "env", 4) == 0)
 		ft_env(mini);
-	else if (ft_strcmp(node->cmd, "exit") == 0)
+	else if (ft_strncmp(node->cmd, "exit", 5) == 0)
 		ft_exit(mini);
 	else
 		return (0);

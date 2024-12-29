@@ -19,7 +19,7 @@ void	ft_cd_go_back(char *pwd, t_mini *mini, int status)
 	new_pwd = encontra_barra(pwd);
 	if (!new_pwd || chdir(new_pwd) == -1)
 	{
-		status = 256;
+		status = 1;
 		perror("Error");
 	}
 	else
@@ -36,7 +36,7 @@ void	ft_cd_no_args(char *home, char *pwd, t_mini *mini, int status)
 		home = ft_encontra_o_home();
 	if (chdir(home) == -1)
 	{
-		status = 256;
+		status = 1;
 		free(home);
 		perror("Error");
 	}

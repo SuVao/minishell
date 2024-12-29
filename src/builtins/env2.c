@@ -17,7 +17,7 @@ void	ft_env(t_mini *mini)
 	int	i;
 
 	i = 0;
-	while (mini->env[i] != NULL)
+	while (mini->env[i])
 		printf("%s\n", mini->env[i++]);
 }
 

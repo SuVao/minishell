@@ -19,7 +19,7 @@ void	ft_cd_with_minus(char *pwd, t_mini *mini, int status)
 	s = get_var_env(mini->env, "OLDPWD=");
 	if (chdir(s) == -1)
 	{
-		status = 256;
+		status = 1;
 		perror("Error");
 	}
 	else
@@ -62,7 +62,7 @@ void	ft_cd_with_dash(t_node *node, t_mini *mini, char *home, int *status)
 	new_pwd = ft_new_pwd(new_pwd, node, home, pwd);
 	if (chdir(new_pwd) == -1)
 	{
-		*status = 256;
+		*status = 1;
 		perror("Error");
 	}
 	else

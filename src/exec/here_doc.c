@@ -31,7 +31,7 @@ static int	ft_sig_int_hd(char *filename, int fd)
 		unlink(filename);
 		close(fd);
 		write(1, "\n", 2);
-		main_pid()->status = 33280;
+		main_pid()->status = 130;
 		return (1);
 	}
 	return (0);

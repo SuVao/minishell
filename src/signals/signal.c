@@ -25,7 +25,7 @@ void	handling_signals(int sig, siginfo_t *info, void *context)
 	(void)context;
 	if (sig == SIGINT)
 	{
-		main_pid()->status = 33280;
+		main_pid()->status = 130;
 		main_pid()->sigint = 130;
 		if (main_pid()->here_doc == 0 && main_pid()->exec == 0)
 		{
@@ -38,7 +38,6 @@ void	handling_signals(int sig, siginfo_t *info, void *context)
 		{
 			write(1, "\n", 2);
 			main_pid()->exec = 0;
-			main_pid()->status = 33280;
 		}
 		else if (main_pid()->here_doc == 1)
 		{

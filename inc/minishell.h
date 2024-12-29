@@ -167,6 +167,7 @@ int				var_accept(t_node *node);
 int				already_exist(char *arg, t_mini *mini);
 void			ft_replace_var(char **env, char *tofound, char *to_replace);
 int				is_var(char *s);
+char *ft_name_var(char *var);
 
 //UNSET
 void			ft_unset(t_mini *mini, t_node *node);
