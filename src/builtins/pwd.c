@@ -59,9 +59,10 @@ void	ft_free_env(char **env)
 
 void	ft_pwd(t_mini *mini)
 {
-	int i = 0;
-	char *pwd;
+	int		i;
+	char	*pwd;
 
+	i = 0;
 	while (mini->env[i] && ft_strncmp(mini->env[i], "PWD=", 4))
 		i++;
 	pwd = ft_substr(mini->env[i], 4, ft_strlen(mini->env[i]) - 4);

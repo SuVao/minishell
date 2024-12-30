@@ -44,9 +44,9 @@ void	ft_unsetting(t_mini *mini, int i)
 
 void	ft_unset(t_mini *mini, t_node *node)
 {
-	int	i;
-	int	j;
-	int	k;
+	int		i;
+	int		j;
+	int		k;
 	char	*var;
 
 	k = 0;
@@ -67,7 +67,6 @@ void	ft_unset(t_mini *mini, t_node *node)
 			}
 			i++;
 		}
-		//free(var);
 		k++;
 	}
 }

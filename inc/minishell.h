@@ -167,7 +167,13 @@ int				var_accept(t_node *node);
 int				already_exist(char *arg, t_mini *mini);
 void			ft_replace_var(char **env, char *tofound, char *to_replace);
 int				is_var(char *s);
-char *ft_name_var(char *var);
+char			*ft_name_var(char *var);
+void			ft_print_export(t_mini *mini);
+int				ft_count_lines(char **args);
+char			**ft_split_vars(t_node *node);
+char			**copy_tmp(int count_lines, int i, t_mini *mini);
+void			tmps_env(char **valid_vars, t_mini *mini, char **tmp_env);
+char			**exportar_variaveis(char **tmp_env, char *var);
 
 //UNSET
 void			ft_unset(t_mini *mini, t_node *node);

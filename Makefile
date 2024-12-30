@@ -50,7 +50,8 @@ SRC_FILES = $(SRC_DIR)/main.c \
             $(BUILTINS_DIR)/env2.c \
             $(BUILTINS_DIR)/env3.c \
             $(BUILTINS_DIR)/export2.c \
-
+            $(BUILTINS_DIR)/export3.c \
+            $(BUILTINS_DIR)/export4.c \
 
 OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES))
 
