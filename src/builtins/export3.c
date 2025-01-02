@@ -40,9 +40,9 @@ void	checks_vars(t_node *node, char **tmp)
 					return ;
 				i++;
 			}
+			else
+				printf("export: `%s': not a valid identifier\n", node->args[k]);
 		}
-		else
-			printf("export: `%s': not a valid identifier\n", node->args[k]);
 		k++;
 	}
 	tmp[i] = NULL;
@@ -68,6 +68,7 @@ char	**ft_find_it(char **tmp_env, int i, char *var, char *name_var)
 			free(name_var);
 			return (NULL);
 		}
+		tmp_env[++i] = NULL;
 	}
 	else if (ft_strncmp(tmp_env[i], name_var, ft_strlen(name_var)) == 0)
 	{
@@ -79,7 +80,6 @@ char	**ft_find_it(char **tmp_env, int i, char *var, char *name_var)
 			return (NULL);
 		}
 	}
-	tmp_env[++i] = NULL;
 	return (tmp_env);
 }
 

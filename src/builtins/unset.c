@@ -59,14 +59,14 @@ void	ft_unset(t_mini *mini, t_node *node)
 		var = ft_name_var(node->args[k]);
 		while (mini->env[i])
 		{
-			if (ft_strncmp(mini->env[i], var,
-					ft_strlen(var)) == 0)
+			if (ft_strncmp(mini->env[i], var, ft_strlen(var)) == 0)
 			{
 				ft_unsetting(mini, i);
 				break ;
 			}
 			i++;
 		}
+		free(var);
 		k++;
 	}
 }

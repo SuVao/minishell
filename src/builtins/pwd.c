@@ -57,17 +57,39 @@ void	ft_free_env(char **env)
 	free(env);
 }
 
+char	*ft_alt_pwd(char *alt_pwd)
+{
+	alt_pwd = getcwd(NULL, 0);
+	if (!alt_pwd)
+		return (NULL);
+	return (alt_pwd);
+}
+
 void	ft_pwd(t_mini *mini)
 {
 	int		i;
 	char	*pwd;
+	char	*alt_pwd;
 
 	i = 0;
+	alt_pwd = NULL;
 	while (mini->env[i] && ft_strncmp(mini->env[i], "PWD=", 4))
 		i++;
-	pwd = ft_substr(mini->env[i], 4, ft_strlen(mini->env[i]) - 4);
-	printf("%s\n", pwd);
-	free(pwd);
+	if (mini->env[i] == NULL || ft_strncmp(mini->env[i], "PWD=/", 5))
+	{
+		alt_pwd = ft_alt_pwd(alt_pwd);
+		printf("%s\n", alt_pwd);
+		free(alt_pwd);
+	}
+	else
+	{
+		pwd = ft_substr(mini->env[i], 4, ft_strlen(mini->env[i]) - 4);
+		if (!pwd)
+			return ;
+		else
+			printf("%s\n", pwd);
+		free(pwd);
+	}
 }
 
 int	is_builtins(t_node *node, t_mini *mini, int *status)

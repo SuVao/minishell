@@ -67,6 +67,8 @@ char	*ft_name_var(char *var)
 	while (var[i] && var[i] != '=')
 		i++;
 	name_var = malloc(i + 2);
+	if (!name_var)
+		return (NULL);
 	i = 0;
 	while (var[i] && var[i] != '=')
 	{
