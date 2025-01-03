@@ -19,7 +19,7 @@ void	cleanup_heredoc_files(t_mini *mini)
 	i = 0;
 	while (i < 100)
 	{
-		if (mini->filenames[i])
+		if (mini->filenames[i] != NULL)
 		{
 			unlink(mini->filenames[i]);
 			free(mini->filenames[i]);

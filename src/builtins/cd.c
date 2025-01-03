@@ -55,7 +55,7 @@ void	ft_cd_with_dash(t_node *node, t_mini *mini, char *home, int *status)
 	new_pwd = NULL;
 	if (!pwd)
 	{
-		write(2, "Error: getcwd failed\n", 22);
+		write(2, "OError: getcwd failed\n", 22);
 		free(home);
 		return ;
 	}
@@ -82,11 +82,7 @@ void	ft_cd(t_node *node, t_mini *mini, int *status)
 	home = get_var_env(mini->env, "HOME=");
 	pwd = getcwd(NULL, 0);
 	if (!pwd)
-	{
-		write(2, "Error: getcwd failed\n", 22);
-		free(home);
-		return ;
-	}
+		pwd = get_var_env(mini->env, "PWD=");
 	if (!node->args[1])
 		ft_cd_no_args(home, pwd, mini, *status);
 	else if (ft_strncmp(node->args[1], ".. ", 2) == 0)
